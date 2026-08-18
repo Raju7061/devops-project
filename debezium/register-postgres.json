@@ -1,0 +1,18 @@
+{
+  "name": "postgres-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "plugin.name": "pgoutput",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "tododb",
+    "database.server.name": "postgres",
+    "topic.prefix": "postgres",
+    "table.include.list": "public.todos",
+    "decimal.handling.mode": "double",
+    "tombstones.on.delete": "false"
+  }
+}

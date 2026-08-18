@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  namespace: cdc-todo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+      - name: consumer
+        image: todo-consumer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BROKER
+          value: kafka:9092
+        - name: ELASTICSEARCH_URL
+          value: http://elasticsearch:9200

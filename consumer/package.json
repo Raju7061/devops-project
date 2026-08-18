@@ -1,0 +1,13 @@
+{
+  "name": "cdc-consumer",
+  "version": "1.0.0",
+  "description": "Kafka to Elasticsearch CDC sync consumer",
+  "main": "src/consumer.js",
+  "scripts": {
+    "start": "node src/consumer.js"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "@elastic/elasticsearch": "^8.13.1"
+  }
+}
