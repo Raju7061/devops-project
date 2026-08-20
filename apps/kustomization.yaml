@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - base/00-namespace.yaml
   - base/helm-release-app.yaml
   - monitoring/helm-repositories.yaml
   - monitoring/helm-release-monitoring.yaml
