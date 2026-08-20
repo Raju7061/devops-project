@@ -1,0 +1,24 @@
+global:
+  resolve_timeout: 5m
+  # Paste your actual Slack Incoming Webhook URL here:
+  slack_api_url: 'https://hooks.slack.com/services/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'
+
+route:
+  group_by: ['alertname', 'consumergroup', 'topic']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  receiver: 'slack-notifications'
+
+receivers:
+  - name: 'slack-notifications'
+    slack_configs:
+      - channel: '#devops-alerts'
+        send_resolved: true
+        icon_emoji: ':fire:'
+        title: '🚨 [{{ .Status | toUpper }}] {{ .CommonAnnotations.summary }}'
+        text: >-
+          *Details:* {{ .CommonAnnotations.description }}
+          *Severity:* `{{ .CommonLabels.severity }}`
+          *Consumer Group:* `{{ .CommonLabels.consumergroup }}`
+          *Topic:* `{{ .CommonLabels.topic }}`
