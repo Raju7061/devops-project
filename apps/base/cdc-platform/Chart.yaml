@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cdc-platform
+description: Event-Driven CDC Platform (Postgres, Kafka, Debezium, ES, Frontend, Backend, Consumer)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
