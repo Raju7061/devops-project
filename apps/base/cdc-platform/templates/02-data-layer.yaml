@@ -1,3 +1,258 @@
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: postgres
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   serviceName: "postgres"
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: postgres
+#   template:
+#     metadata:
+#       labels:
+#         app: postgres
+#     spec:
+#       containers:
+#         - name: postgres
+#           image: {{ .Values.images.postgres }}
+#           args: ["postgres", "-c", "wal_level=logical"]
+#           env:
+#             - name: POSTGRES_USER
+#               value: "postgres"
+#             - name: POSTGRES_PASSWORD
+#               value: "postgres"
+#             - name: POSTGRES_DB
+#               value: "tododb"
+#           ports:
+#             - containerPort: 5432
+#           volumeMounts:
+#             - name: postgres-storage
+#               mountPath: /var/lib/postgresql/data
+#             - name: init-script
+#               mountPath: /docker-entrypoint-initdb.d
+#       volumes:
+#         - name: init-script
+#           configMap:
+#             name: postgres-init-script
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: postgres-storage
+#       spec:
+#         accessModes: ["ReadWriteOnce"]
+#         resources:
+#           requests:
+#             storage: {{ .Values.persistence.postgresSize }}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: postgres
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   selector:
+#     app: postgres
+#   ports:
+#     - port: 5432
+#       targetPort: 5432
+# ---
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: kafka
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   serviceName: "kafka"
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: kafka
+#   template:
+#     metadata:
+#       labels:
+#         app: kafka
+#     spec:
+#       containers:
+#         - name: kafka
+#           image: {{ .Values.images.kafka }}
+#           env:
+#             - name: KAFKA_BROKER_ID
+#               value: "1"
+#             - name: KAFKA_ZOOKEEPER_CONNECT
+#               value: "zookeeper:2181"
+#             - name: KAFKA_ADVERTISED_LISTENERS
+#               value: "PLAINTEXT://kafka:9092"
+#             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+#               value: "1"
+#             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+#               value: "true"
+#           ports:
+#             - containerPort: 9092
+#           volumeMounts:
+#             - name: kafka-data
+#               mountPath: /var/lib/kafka/data
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: kafka-data
+#       spec:
+#         accessModes: ["ReadWriteOnce"]
+#         resources:
+#           requests:
+#             storage: {{ .Values.persistence.kafkaSize }}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: kafka
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   selector:
+#     app: kafka
+#   ports:
+#     - port: 9092
+#       targetPort: 9092
+# ---
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: zookeeper
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   serviceName: "zookeeper"
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: zookeeper
+#   template:
+#     metadata:
+#       labels:
+#         app: zookeeper
+#     spec:
+#       containers:
+#         - name: zookeeper
+#           image: {{ .Values.images.zookeeper }}
+#           env:
+#             - name: ZOOKEEPER_CLIENT_PORT
+#               value: "2181"
+#             - name: ZOOKEEPER_TICK_TIME
+#               value: "2000"
+#           ports:
+#             - containerPort: 2181
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: zookeeper
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   selector:
+#     app: zookeeper
+#   ports:
+#     - port: 2181
+#       targetPort: 2181
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: debezium
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: debezium
+#   template:
+#     metadata:
+#       labels:
+#         app: debezium
+#     spec:
+#       containers:
+#         - name: debezium
+#           image: {{ .Values.images.debezium }}
+#           env:
+#             - name: BOOTSTRAP_SERVERS
+#               value: "kafka:9092"
+#             - name: GROUP_ID
+#               value: "1"
+#             - name: CONFIG_STORAGE_TOPIC
+#               value: "my_connect_configs"
+#             - name: OFFSET_STORAGE_TOPIC
+#               value: "my_connect_offsets"
+#             - name: STATUS_STORAGE_TOPIC
+#               value: "my_connect_statuses"
+#           ports:
+#             - containerPort: 8083
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: debezium
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   selector:
+#     app: debezium
+#   ports:
+#     - port: 8083
+#       targetPort: 8083
+# ---
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: elasticsearch
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   serviceName: "elasticsearch"
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: elasticsearch
+#   template:
+#     metadata:
+#       labels:
+#         app: elasticsearch
+#     spec:
+#       containers:
+#         - name: elasticsearch
+#           image: {{ .Values.images.elasticsearch }}
+#           env:
+#             - name: discovery.type
+#               value: "single-node"
+#             - name: xpack.security.enabled
+#               value: "false"
+#             - name: ES_JAVA_OPTS
+#               value: "-Xms512m -Xmx512m"
+#           ports:
+#             - containerPort: 9200
+#           volumeMounts:
+#             - name: es-data
+#               mountPath: /usr/share/elasticsearch/data
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: es-data
+#       spec:
+#         accessModes: ["ReadWriteOnce"]
+#         resources:
+#           requests:
+#             storage: {{ .Values.persistence.elasticsearchSize }}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: elasticsearch
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   selector:
+#     app: elasticsearch
+#   ports:
+#     - port: 9200
+#       targetPort: 9200
+
+
+
+# -----------------------------------------------------------------------------
+# POSTGRES
+# -----------------------------------------------------------------------------
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -17,7 +272,10 @@ spec:
       containers:
         - name: postgres
           image: {{ .Values.images.postgres }}
-          args: ["postgres", "-c", "wal_level=logical"]
+          args:
+            - postgres
+            - -c
+            - wal_level=logical
           env:
             - name: POSTGRES_USER
               value: "postgres"
@@ -40,10 +298,12 @@ spec:
     - metadata:
         name: postgres-storage
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: {{ .Values.persistence.postgresSize }}
+
 ---
 apiVersion: v1
 kind: Service
@@ -56,62 +316,10 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: kafka
-  namespace: {{ .Values.namespace }}
-spec:
-  serviceName: "kafka"
-  replicas: 1
-  selector:
-    matchLabels:
-      app: kafka
-  template:
-    metadata:
-      labels:
-        app: kafka
-    spec:
-      containers:
-        - name: kafka
-          image: {{ .Values.images.kafka }}
-          env:
-            - name: KAFKA_BROKER_ID
-              value: "1"
-            - name: KAFKA_ZOOKEEPER_CONNECT
-              value: "zookeeper:2181"
-            - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://kafka:9092"
-            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-              value: "1"
-            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
-              value: "true"
-          ports:
-            - containerPort: 9092
-          volumeMounts:
-            - name: kafka-data
-              mountPath: /var/lib/kafka/data
-  volumeClaimTemplates:
-    - metadata:
-        name: kafka-data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: {{ .Values.persistence.kafkaSize }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kafka
-  namespace: {{ .Values.namespace }}
-spec:
-  selector:
-    app: kafka
-  ports:
-    - port: 9092
-      targetPort: 9092
+
+# -----------------------------------------------------------------------------
+# ZOOKEEPER
+# -----------------------------------------------------------------------------
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -139,6 +347,7 @@ spec:
               value: "2000"
           ports:
             - containerPort: 2181
+
 ---
 apiVersion: v1
 kind: Service
@@ -151,6 +360,85 @@ spec:
   ports:
     - port: 2181
       targetPort: 2181
+
+# -----------------------------------------------------------------------------
+# KAFKA (UPDATED)
+# -----------------------------------------------------------------------------
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceName: "kafka"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: {{ .Values.images.kafka }}
+          env:
+            - name: KAFKA_BROKER_ID
+              value: "1"
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: "zookeeper:2181"
+
+            # Added listener configuration
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://0.0.0.0:9092"
+
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka:9092"
+
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "PLAINTEXT:PLAINTEXT"
+
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
+
+          ports:
+            - containerPort: 9092
+
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/kafka/data
+
+  volumeClaimTemplates:
+    - metadata:
+        name: kafka-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.persistence.kafkaSize }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: kafka
+  ports:
+    - port: 9092
+      targetPort: 9092
+
+# -----------------------------------------------------------------------------
+# DEBEZIUM
+# -----------------------------------------------------------------------------
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -183,6 +471,7 @@ spec:
               value: "my_connect_statuses"
           ports:
             - containerPort: 8083
+
 ---
 apiVersion: v1
 kind: Service
@@ -195,6 +484,10 @@ spec:
   ports:
     - port: 8083
       targetPort: 8083
+
+# -----------------------------------------------------------------------------
+# ELASTICSEARCH
+# -----------------------------------------------------------------------------
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -231,10 +524,12 @@ spec:
     - metadata:
         name: es-data
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: {{ .Values.persistence.elasticsearchSize }}
+
 ---
 apiVersion: v1
 kind: Service
