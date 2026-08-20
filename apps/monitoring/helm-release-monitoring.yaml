@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: kube-prometheus-stack
@@ -22,7 +22,7 @@ spec:
       config:
         global:
           resolve_timeout: 5m
-          slack_api_url: 'https://hooks.slack.com/services/T08SAG77C1W/YOUR/REAL/WEBHOOK_URL'
+          slack_api_url: 'https://hooks.slack.com/services/REPLACE_WITH_YOUR_SLACK_WEBHOOK'
         route:
           group_by: ['alertname', 'consumergroup', 'topic']
           group_wait: 10s
@@ -54,7 +54,7 @@ spec:
                   summary: "High Kafka Consumer Lag detected: {{ $labels.consumergroup }}"
                   description: "Consumer group '{{ $labels.consumergroup }}' has lag >= 5000 messages."
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: prometheus-kafka-exporter
