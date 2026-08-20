@@ -1,0 +1,11 @@
+groups:
+  - name: kafka_cdc_alerts
+    rules:
+      - alert: KafkaConsumerLagHigh
+        expr: sum by (consumergroup, topic) (kafka_consumergroup_lag_sum or kafka_consumergroup_lag) >= 5000
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Kafka Consumer Lag detected: {{ $labels.consumergroup }}"
+          description: "Consumer group '{{ $labels.consumergroup }}' on topic '{{ $labels.topic }}' has a lag of {{ $value }} messages (threshold >= 5000)."
