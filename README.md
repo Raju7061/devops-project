@@ -272,3 +272,250 @@ kubectl get pods,svc -n cdc-todo-app -w
 ```
 
 ```
+
+....................................................................................................
+ BELOW IS K8S PART 
+.................................................................................................
+
+
+# Real-Time Event-Driven CDC & CQRS Platform with GitOps (Flux CD & Kubernetes)
+
+This repository contains an end-to-end event-driven Change Data Capture (CDC) and Command Query Responsibility Segregation (CQRS) pipeline deployed entirely via **GitOps (Flux CD v2)** on **Kubernetes (K3s/Colima)**, monitored with **Prometheus, Grafana, Alertmanager**, and integrated with **Slack incident alerting**.
+
+---
+
+## 1. Architecture & System Design
+
+```text
+[ React Frontend ] (Port 3000)
+       │
+       ▼
+[ Node/Express Backend ] (Port 5000)
+       │
+       ▼
+[ PostgreSQL 15 ] (wal_level=logical)
+       │
+       ▼ (WAL Replication via pgoutput)
+[ Debezium Connect ] (Port 8083)
+       │
+       ▼ (CDC Stream: postgres.public.todos)
+[ Apache Kafka & ZooKeeper ] (Port 9092) ──► [ Redpanda Console / Kowl ] (Port 8080)
+       │
+       ▼
+[ Node Consumer Service ]
+       │
+       ▼ (Sync CQRS Read Model)
+[ Elasticsearch ] (Port 9200) ──► [ Kibana ] (Port 5601)
+       │
+═════════════════════════════════════════════════════════════════════════════
+                       OBSERVABILITY & MONITORING LAYER
+═════════════════════════════════════════════════════════════════════════════
+  [ Postgres Exporter ]      [ Kafka Exporter ]      [ ES Exporter ]      [ Blackbox Exporter ]
+             │                       │                      │                     │
+             └───────────────────────┴──────────┬───────────┴─────────────────────┘
+                                                ▼
+                                    [ Prometheus Server ]
+                                                │
+                                ┌───────────────┴───────────────┐
+                                ▼                               ▼
+                        [ Alertmanager ]                [ Grafana 10 ]
+                                │                       (Port 3001)
+                                ▼
+                       [ Slack Notifications ]
+                        (#all-devops-alerts)
+
+```
+
+---
+
+## 2. Core Components & Tech Stack
+
+* **Primary Database (Write Model):** PostgreSQL 15 (configured with `wal_level=logical` and `REPLICA IDENTITY FULL`).
+* **Change Data Capture (CDC):** Debezium Connect (captures row-level database WAL changes and streams JSON events to Kafka).
+* **Message Broker:** Apache Kafka 7.6.0 & ZooKeeper.
+* **Search / Read Model (CQRS):** Elasticsearch 8.13.1 (stores denormalized read-optimized todo documents).
+* **Consumer Service:** Custom Node.js microservice syncing Kafka CDC events directly to Elasticsearch.
+* **Web UI & API:** React Frontend & Node.js/Express Backend.
+* **Observability Stack:**
+* **kube-prometheus-stack:** Prometheus Operator, Prometheus Server, Grafana, Alertmanager.
+* **Metric Exporters:** `prometheus-kafka-exporter`, `postgres-exporter`, `elasticsearch-exporter`, `blackbox-exporter`.
+* **Alert Routing:** Automated Slack notifications for high Kafka consumer lag thresholds (`lag >= 5000`).
+
+
+* **GitOps Engine:** Flux CD v2 syncing declarative Helm Charts and Kubernetes manifests automatically from GitHub.
+
+---
+
+## 3. GitOps Repository Layout
+
+```text
+todo-gitops/
+├── apps/
+│   ├── kustomization.yaml              # Root App Kustomization entrypoint
+│   ├── base/
+│   │   ├── 00-namespace.yaml           # cdc-todo-app Namespace
+│   │   ├── helm-release-app.yaml       # Flux HelmRelease for custom app
+│   │   └── cdc-platform/               # Custom Application Helm Chart
+│   │       ├── Chart.yaml
+│   │       ├── values.yaml
+│   │       └── templates/
+│   │           ├── 01-configmaps.yaml  # DB Init Scripts & Configs
+│   │           ├── 02-data-layer.yaml  # StatefulSets: Postgres, Kafka, ZK, ES, Debezium
+│   │           └── 03-apps.yaml        # Deployments: Backend, Consumer, Frontend, Kowl
+│   └── monitoring/
+│       ├── helm-repositories.yaml      # Flux HelmRepository sources (Prometheus/Grafana)
+│       └── helm-release-monitoring.yaml# kube-prometheus-stack + Kafka Exporter HelmReleases
+└── clusters/
+    └── staging/
+        ├── flux-system/                # Flux CD core controllers & sync manifests
+        └── apps.yaml                   # Root Cluster Kustomization targeting ./apps
+
+```
+
+---
+
+## 4. Key Troubleshooting & Fixes Implemented
+
+**1. Kafka CrashLoopBackOff (`port is deprecated`)**
+
+* **Root Cause:** Kubernetes automatically injected a cluster environment variable `KAFKA_PORT=tcp://<IP>:9092` into pods because a service was named `kafka`. Confluent Kafka treated this as a legacy port flag and terminated.
+* **Resolution:** Configured `enableServiceLinks: false` under the `kafka` pod template spec, and explicitly defined `KAFKA_LISTENERS` and `KAFKA_LISTENER_SECURITY_PROTOCOL_MAP`.
+
+**2. GitOps Chart Parsing Error in Flux Kustomize**
+
+* **Root Cause:** Flux's Kustomize controller attempted to parse `Chart.yaml` as a standard Kubernetes YAML object.
+* **Resolution:** Added an explicit `apps/kustomization.yaml` containing only the specific `HelmRelease` and `HelmRepository` manifests, excluding raw Helm chart files from direct Kustomize parsing.
+
+**3. Namespace Dependency Timing**
+
+* **Root Cause:** `HelmRelease` CRDs failed because the destination namespace `cdc-todo-app` was missing prior to installation.
+* **Resolution:** Created `apps/base/00-namespace.yaml` and loaded it first in the Kustomize resource chain.
+
+**4. GitHub Secret Scanning Push Protection**
+
+* **Root Cause:** Push blocked due to an exposed Slack Incoming Webhook URL in `alertmanager.yml`.
+* **Resolution:** Masked webhook endpoints in version control and configured GitOps release secrets safely.
+
+---
+
+## 5. Local Setup & Bootstrap Guide
+
+### Step 1: Start Local Kubernetes Engine (Colima)
+
+```bash
+# Start Colima with Kubernetes enabled
+colima start --cpu 4 --memory 8 --kubernetes
+
+# Verify cluster node status
+kubectl get nodes
+
+```
+
+### Step 2: Bootstrap Flux CD
+
+```bash
+export GITHUB_TOKEN="<YOUR_GITHUB_PAT>"
+
+flux bootstrap github \
+  --owner=Raju7061 \
+  --repository=todo-gitops \
+  --branch=main \
+  --path=clusters/staging \
+  --personal
+
+```
+
+### Step 3: Trigger Reconcile & Verify Pods
+
+```bash
+# Force immediate sync
+flux reconcile source git flux-system
+flux reconcile kustomization apps-sync --with-source
+
+# Verify that all pods reach Running status
+kubectl get pods -n cdc-todo-app -w
+
+```
+
+---
+
+## 6. Registering the Debezium Postgres CDC Connector
+
+Once the `debezium` pod is `Running`, register the PostgreSQL connector:
+
+
+run below command inside debezium pod 
+
+```bash
+curl -i -X POST http://localhost:8083/connectors/ \
+  -H "Accept:application/json" \
+  -H "Content-Type:application/json" \
+  -d '{
+    "name": "postgres-connector",
+    "config": {
+      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+      "tasks.max": "1",
+      "plugin.name": "pgoutput",
+      "database.hostname": "postgres",
+      "database.port": "5432",
+      "database.user": "postgres",
+      "database.password": "postgres",
+      "database.dbname": "tododb",
+      "database.server.name": "postgres",
+      "topic.prefix": "postgres",
+      "table.include.list": "public.todos",
+      "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+      "schema.history.internal.kafka.topic": "schema-changes.todos"
+    }
+  }'
+
+```
+
+Verify connector state:
+
+```bash
+kubectl exec -it deployment/debezium -n cdc-todo-app -- curl -s http://localhost:8083/connectors/postgres-connector/status
+
+```
+
+---
+
+## 7. Accessing Application & Monitoring UIs
+
+Open terminal sessions to port-forward the services:
+
+```bash
+# Frontend Web UI
+kubectl port-forward svc/frontend 3000:80 -n cdc-todo-app &
+
+# Redpanda Console / Kafka UI
+kubectl port-forward svc/kowl 8080:8080 -n cdc-todo-app &
+
+# Grafana Dashboards
+kubectl port-forward svc/kube-prometheus-stack-grafana 3001:80 -n cdc-todo-app &
+
+# Prometheus
+kubectl port-forward svc/prometheus-kube-prometheus-stack-prometheus 9090:9090 -n cdc-todo-app &
+
+# Alertmanager
+kubectl port-forward svc/kube-prometheus-stack-alertmanager 9093:9093 -n cdc-todo-app &
+
+```
+
+| Application / Tool | URL | Credentials | Purpose |
+| --- | --- | --- | --- |
+| **Frontend UI** | `http://localhost:3000` | *None* | Todo app CRUD operations |
+| **Redpanda Console** | `http://localhost:8080` | *None* | View Kafka topics & CDC event payloads |
+| **Grafana** | `http://localhost:3001` | `admin` / *(retrieved via secret)* | Visualize consumer lag & cluster health |
+| **Prometheus** | `http://localhost:9090` | *None* | Query PromQL metrics & check active alert rules |
+| **Alertmanager** | `http://localhost:9093` | *None* | Manage alert silences & inspect Slack routing |
+
+---
+
+## 8. Managing Local Machine Resource Consumption
+
+Running 15+ workloads locally inside a Linux VM consumes noticeable CPU and memory. Use these controls when developing locally:
+
+* **Stop Cluster:** Run `colima stop` when finished testing to free up CPU and battery.
+* **Scrape Intervals:** Set Prometheus scrape intervals to `30s` or `60s` instead of `5s` to reduce continuous CPU evaluation cycles.
+* **Java Heap Size:** Keep `ES_JAVA_OPTS="-Xms256m -Xmx256m"` and `KAFKA_HEAP_OPTS="-Xms256m -Xmx256m"` configured for local lightweight execution.
