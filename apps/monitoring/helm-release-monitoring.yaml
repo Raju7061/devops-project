@@ -25,7 +25,7 @@ spec:
       config:
         global:
           resolve_timeout: 5m
-          slack_api_url: 'https://hooks.slack.com/services/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'
+          slack_api_url: 'https://hooks.slack.com/services/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'
         route:
           group_by: ['alertname', 'namespace']
           group_wait: 10s
@@ -38,7 +38,7 @@ spec:
         receivers:
           - name: 'slack-notifications'
             slack_configs:
-              - channel: '#all-devops-alerts'
+              - channel: '#new-channel'
                 send_resolved: true
                 title: '🚨 [{{ .Status | toUpper }}] {{ .CommonAnnotations.summary }}'
                 text: >-
