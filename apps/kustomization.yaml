@@ -5,5 +5,5 @@ resources:
   - base/helm-release-app.yaml
   - monitoring/helm-repositories.yaml
   - monitoring/helm-release-monitoring.yaml
-  - monitoring/prometheus-rules.yaml
+  - monitoring/prometheus-rules-kafka.yaml
   - base/ingress-all.yaml
