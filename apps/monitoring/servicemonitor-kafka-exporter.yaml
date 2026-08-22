@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-kafka-exporter
+  namespace: cdc-todo-app
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-kafka-exporter
+  endpoints:
+    - port: exporter-port
+      interval: 15s
+      scrapeTimeout: 10s
+      path: /metrics
