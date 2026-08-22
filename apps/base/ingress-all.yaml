@@ -1,0 +1,104 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cdc-all-ingress
+  namespace: cdc-todo-app
+  annotations:
+    ingress.class: traefik
+spec:
+  rules:
+    # 1. Frontend Web UI
+    - host: todo.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+
+    # 2. Backend REST API
+    - host: api.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 5000
+
+    # 3. Redpanda / Kowl (Kafka UI)
+    - host: kowl.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kowl
+                port:
+                  number: 8080
+
+    # 4. Debezium Connect REST API
+    - host: debezium.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: debezium
+                port:
+                  number: 8083
+
+    # 5. Elasticsearch HTTP API
+    - host: elasticsearch.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: elasticsearch
+                port:
+                  number: 9200
+
+    # 6. Grafana Dashboards
+    - host: grafana.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-grafana
+                port:
+                  number: 80
+
+    # 7. Prometheus UI
+    - host: prometheus.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-kube-prometheus-stack-prometheus
+                port:
+                  number: 9090
+
+    # 8. Alertmanager UI
+    - host: alertmanager.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-alertmanager
+                port:
+                  number: 9093

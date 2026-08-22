@@ -5,3 +5,4 @@ resources:
   - base/helm-release-app.yaml
   - monitoring/helm-repositories.yaml
   - monitoring/helm-release-monitoring.yaml
+  - base/ingress-all.yaml
