@@ -25,7 +25,7 @@ spec:
       config:
         global:
           resolve_timeout: 5m
-          slack_api_url: 'https://hooks.slack.com/services/YOUR_NEW_WORKSPACE/YOUR_NEW_CHANNEL/YOUR_NEW_TOKEN'
+          slack_api_url: 'https://hooks.slack.com/services/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'
         route:
           group_by: ['alertname', 'namespace']
           group_wait: 10s
