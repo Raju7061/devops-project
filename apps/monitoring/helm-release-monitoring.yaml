@@ -40,19 +40,7 @@ spec:
                   *Severity:* `{{ .CommonLabels.severity }}`
                   *Consumer Group:* `{{ .CommonLabels.consumergroup }}`
                   *Topic:* `{{ .CommonLabels.topic }}`
-    prometheus:
-      prometheusSpec:
-        additionalAlertRules:
-          - name: kafka_cdc_alerts
-            rules:
-              - alert: KafkaConsumerLagHigh
-                expr: sum by (consumergroup, topic) (kafka_consumergroup_lag_sum or kafka_consumergroup_lag) >= 5000
-                for: 10s
-                labels:
-                  severity: critical
-                annotations:
-                  summary: "High Kafka Consumer Lag detected: {{ $labels.consumergroup }}"
-                  description: "Consumer group '{{ $labels.consumergroup }}' has lag >= 5000 messages."
+
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -77,3 +65,10 @@ spec:
   values:
     kafkaServer:
       - kafka.cdc-todo-app.svc.cluster.local:9092
+    serviceMonitor:
+      enabled: true
+      namespace: cdc-todo-app
+      interval: 15s
+      scrapeTimeout: 10s
+      additionalLabels:
+        release: kube-prometheus-stack

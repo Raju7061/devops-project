@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kafka-cdc-alerts
+  namespace: cdc-todo-app
+  labels:
+    release: kube-prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: kafka.cdc.rules
+      rules:
+        - alert: KafkaHighConsumerLag
+          expr: sum by (consumergroup, topic) (kafka_consumergroup_lag{consumergroup=~"todo-.*|consumer-.*"}) >= 5000
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High Kafka Consumer Lag Detected"
+            description: "Consumer group {{ $labels.consumergroup }} on topic {{ $labels.topic }} has a lag of {{ $value }} messages (threshold: 5000)."
+
+        - alert: KafkaExporterDown
+          expr: up{job="prometheus-kafka-exporter"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Kafka Exporter is Down"
+            description: "Prometheus cannot scrape kafka-exporter metrics from cdc-todo-app."
