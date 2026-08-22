@@ -21,18 +21,20 @@ spec:
     remediation:
       retries: 3
   values:
-    # 1. Global Alertmanager & Slack Notification Channel
     alertmanager:
       config:
         global:
           resolve_timeout: 5m
-          slack_api_url: 'https://hooks.slack.com/services/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'
+          slack_api_url: 'https://hooks.slack.com/services/YOUR_NEW_WORKSPACE/YOUR_NEW_CHANNEL/YOUR_NEW_TOKEN'
         route:
           group_by: ['alertname', 'namespace']
           group_wait: 10s
           group_interval: 30s
           repeat_interval: 1h
           receiver: 'slack-notifications'
+          routes:
+            - receiver: 'slack-notifications'
+              continue: true
         receivers:
           - name: 'slack-notifications'
             slack_configs:
@@ -45,18 +47,13 @@ spec:
                   *Severity:* `{{ .CommonLabels.severity }}`
                   *Namespace:* `{{ .CommonLabels.namespace }}`
 
-    # 2. Prometheus Spec with Native Kubernetes Scrape Discovery
     prometheus:
       prometheusSpec:
-        scrapeInterval: "5s"
-        evaluationInterval: "5s"
+        scrapeInterval: "15s"
+        evaluationInterval: "15s"
         serviceMonitorSelectorNilUsesHelmValues: false
         podMonitorSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false
-        additionalScrapeConfigs:
-          - job_name: 'kafka-exporter'
-            static_configs:
-              - targets: ['prometheus-kafka-exporter.cdc-todo-app.svc.cluster.local:9308']
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2

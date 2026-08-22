@@ -11,13 +11,13 @@ spec:
     - name: kafka.cdc.rules
       rules:
         - alert: KafkaHighConsumerLag
-          expr: sum by (consumergroup, topic) (kafka_consumergroup_lag_sum{topic=~".*todos.*"} or kafka_consumergroup_lag{topic=~".*todos.*"})
-          for: 1m
+          expr: (sum by (consumergroup, topic) (kafka_consumergroup_lag{consumergroup="es-cdc-group", topic="postgres.public.todos"} or kafka_consumergroup_lag_sum{consumergroup="es-cdc-group", topic="postgres.public.todos"})) >= 5000
+          for: 30s
           labels:
             severity: critical
           annotations:
-            summary: "High Kafka Consumer Lag Detected"
-            description: "Consumer group {{ $labels.consumergroup }} on topic {{ $labels.topic }} has a lag of {{ $value }} messages (threshold: 5000)."
+            summary: "High Kafka Consumer Lag detected: {{ $labels.consumergroup }}"
+            description: "Consumer group '{{ $labels.consumergroup }}' on topic '{{ $labels.topic }}' has a lag of {{ $value }} messages (threshold >= 5000)."
 
         - alert: KafkaExporterDown
           expr: up{job="prometheus-kafka-exporter"} == 0
