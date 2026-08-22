@@ -6,9 +6,12 @@ metadata:
   labels:
     release: kube-prometheus-stack
 spec:
+  namespaceSelector:
+    matchNames:
+      - cdc-todo-app
   selector:
     matchLabels:
-      app.kubernetes.io/name: prometheus-kafka-exporter
+      app: prometheus-kafka-exporter
   endpoints:
     - port: exporter-port
       interval: 15s
