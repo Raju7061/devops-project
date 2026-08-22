@@ -1,7 +1,7 @@
 global:
   resolve_timeout: 5m
   # Paste your actual Slack Incoming Webhook URL here:
-  slack_api_url: 'https://hooks.slack.com/services/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'
+  slack_api_url: 'R'
 
 route:
   group_by: ['alertname', 'consumergroup', 'topic']
