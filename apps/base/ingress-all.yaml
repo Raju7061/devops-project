@@ -3,9 +3,8 @@ kind: Ingress
 metadata:
   name: cdc-all-ingress
   namespace: cdc-todo-app
-  annotations:
-    ingress.class: traefik
 spec:
+  ingressClassName: traefik
   rules:
     # 1. Frontend Web UI
     - host: todo.local
