@@ -3,10 +3,14 @@ kind: Ingress
 metadata:
   name: cdc-all-ingress
   namespace: cdc-todo-app
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
 spec:
-  ingressClassName: traefik
+  ingressClassName: nginx
   rules:
-    # 1. Frontend Web UI
+    # 1. Frontend UI
     - host: todo.local
       http:
         paths:
@@ -42,7 +46,7 @@ spec:
                 port:
                   number: 8080
 
-    # 4. Debezium Connect REST API
+    # 4. Debezium Connect API
     - host: debezium.local
       http:
         paths:
@@ -86,7 +90,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: prometheus-kube-prometheus-stack-prometheus
+                name: kube-prometheus-stack-prometheus
                 port:
                   number: 9090
 
