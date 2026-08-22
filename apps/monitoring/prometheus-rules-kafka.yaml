@@ -11,7 +11,7 @@ spec:
     - name: kafka.cdc.rules
       rules:
         - alert: KafkaHighConsumerLag
-          expr: sum by (consumergroup, topic) (kafka_consumergroup_lag{consumergroup=~"todo-.*|consumer-.*"}) >= 5000
+          expr: sum by (consumergroup, topic) (kafka_consumergroup_lag_sum{topic=~".*todos.*"} or kafka_consumergroup_lag{topic=~".*todos.*"})
           for: 1m
           labels:
             severity: critical
