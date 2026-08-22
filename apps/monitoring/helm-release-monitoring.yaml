@@ -17,16 +17,20 @@ spec:
     createNamespace: true
     remediation:
       retries: 3
+  upgrade:
+    remediation:
+      retries: 3
   values:
+    # 1. Global Alertmanager & Slack Notification Channel
     alertmanager:
       config:
         global:
           resolve_timeout: 5m
           slack_api_url: 'https://hooks.slack.com/services/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'
         route:
-          group_by: ['alertname', 'consumergroup', 'topic']
+          group_by: ['alertname', 'namespace']
           group_wait: 10s
-          group_interval: 1m
+          group_interval: 30s
           repeat_interval: 1h
           receiver: 'slack-notifications'
         receivers:
@@ -36,10 +40,23 @@ spec:
                 send_resolved: true
                 title: '🚨 [{{ .Status | toUpper }}] {{ .CommonAnnotations.summary }}'
                 text: >-
+                  *Alert:* {{ .CommonAnnotations.summary }}
                   *Details:* {{ .CommonAnnotations.description }}
                   *Severity:* `{{ .CommonLabels.severity }}`
-                  *Consumer Group:* `{{ .CommonLabels.consumergroup }}`
-                  *Topic:* `{{ .CommonLabels.topic }}`
+                  *Namespace:* `{{ .CommonLabels.namespace }}`
+
+    # 2. Prometheus Spec with Native Kubernetes Scrape Discovery
+    prometheus:
+      prometheusSpec:
+        scrapeInterval: "5s"
+        evaluationInterval: "5s"
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+        additionalScrapeConfigs:
+          - job_name: 'kafka-exporter'
+            static_configs:
+              - targets: ['prometheus-kafka-exporter.cdc-todo-app.svc.cluster.local:9308']
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -65,10 +82,3 @@ spec:
   values:
     kafkaServer:
       - kafka.cdc-todo-app.svc.cluster.local:9092
-    serviceMonitor:
-      enabled: true
-      namespace: cdc-todo-app
-      interval: 15s
-      scrapeTimeout: 10s
-      additionalLabels:
-        release: kube-prometheus-stack
