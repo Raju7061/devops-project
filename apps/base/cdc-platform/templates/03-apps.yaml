@@ -20,10 +20,39 @@ spec:
           env:
             - name: PORT
               value: "5000"
-            - name: DATABASE_URL
-              value: "postgresql://postgres:postgres@postgres:5432/tododb"
             - name: ELASTICSEARCH_URL
               value: "http://elasticsearch:9200"
+
+            # 1. Pull credentials securely from Secret
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-secret
+                  key: DB_PASSWORD
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-secret
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-secret
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-secret
+                  key: DB_NAME
+
+            # 2. Compose DATABASE_URL using the variables above
+            - name: DATABASE_URL
+              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
           ports:
             - containerPort: 5000
 ---
