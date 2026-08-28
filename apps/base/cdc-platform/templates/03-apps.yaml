@@ -50,9 +50,13 @@ spec:
                   name: rds-db-secret
                   key: DB_NAME
 
-            # 2. Compose DATABASE_URL using the variables above
+            # 2. Add SSL configuration for PostgreSQL
+            - name: PGSSLMODE
+              value: "no-verify"
+
+            # 3. Compose DATABASE_URL with SSL parameter appended
             - name: DATABASE_URL
-              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=no-verify"
           ports:
             - containerPort: 5000
 ---
