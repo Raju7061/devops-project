@@ -598,8 +598,8 @@ const styles = {
   terminalBox: {
     backgroundColor: '#020617',
     border: '1px solid #1e293b',
-    borderRadius: '8px',
-    padding: '10px 14px',
+    borderRadius: '9px',
+    padding: '11px 14px',
     fontFamily: '"Fira Code", monospace',
     fontSize: '13px',
     color: '#e2e8f0',
