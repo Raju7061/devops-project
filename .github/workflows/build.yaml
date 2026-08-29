@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect Changes in Directories
+      - name: Detect Changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -34,7 +34,6 @@ jobs:
         run: |
           git fetch --tags
 
-          # Get latest Git tag (v26.100.*)
           LATEST_TAG=$(git tag -l "v26.100.*" | sort -V | tail -n1)
           if [ -z "$LATEST_TAG" ]; then
             PATCH_NUM=1
@@ -48,9 +47,10 @@ jobs:
 
           echo "NEXT_RELEASE_TAG=$NEXT_RELEASE_TAG" >> $GITHUB_OUTPUT
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "Generated Tag: $NEXT_RELEASE_TAG, Docker Tag: $IMAGE_TAG"
+          echo "FRONTEND_CHANGED=${{ steps.filter.outputs.frontend }}" >> $GITHUB_OUTPUT
+          echo "BACKEND_CHANGED=${{ steps.filter.outputs.backend }}" >> $GITHUB_OUTPUT
 
-      - name: Set up QEMU (Multi-Arch Emulation)
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -62,7 +62,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Frontend (Multi-Arch)
+      # Build and Push FRONTEND ONLY if frontend changed
+      - name: Build & Push Frontend
         if: steps.filter.outputs.frontend == 'true'
         uses: docker/build-push-action@v5
         with:
@@ -72,7 +73,8 @@ jobs:
           push: true
           tags: 2024dock/cdc-frontend:${{ steps.get_ver.outputs.IMAGE_TAG }}
 
-      - name: Build and Push Backend (Multi-Arch)
+      # Build and Push BACKEND ONLY if backend changed
+      - name: Build & Push Backend
         if: steps.filter.outputs.backend == 'true'
         uses: docker/build-push-action@v5
         with:
@@ -82,12 +84,25 @@ jobs:
           push: true
           tags: 2024dock/cdc-backend:${{ steps.get_ver.outputs.IMAGE_TAG }}
 
-      - name: Create and Push Git Release Tag
-        if: steps.filter.outputs.frontend == 'true' || steps.filter.outputs.backend == 'true'
+      # Update release.yaml so we know WHICH service was built with this tag
+      - name: Update release metadata
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          TAG_NAME="${{ steps.get_ver.outputs.NEXT_RELEASE_TAG }}"
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
+          cat << EOF > release.yaml
+          release:
+            version: "${{ steps.get_ver.outputs.NEXT_RELEASE_TAG }}"
+            imageTag: "${{ steps.get_ver.outputs.IMAGE_TAG }}"
+            updatedService:
+              frontend: ${{ steps.filter.outputs.frontend }}
+              backend: ${{ steps.filter.outputs.backend }}
+          EOF
+
+          git add release.yaml
+          git commit -m "chore: record built images for ${{ steps.get_ver.outputs.NEXT_RELEASE_TAG }} [skip ci]"
+
+          # Create & Push Tag
+          git tag ${{ steps.get_ver.outputs.NEXT_RELEASE_TAG }}
+          git push origin main
+          git push origin ${{ steps.get_ver.outputs.NEXT_RELEASE_TAG }}
