@@ -6,7 +6,7 @@ images:
   kafka: confluentinc/cp-kafka:7.6.0
   debezium: debezium/connect:2.5
   elasticsearch: docker.elastic.co/elasticsearch/elasticsearch:8.13.1
-  backend: 2024dock/cdc-backend:v1.0.1-amd64
+  backend: 2024dock/cdc-backend:v1.0.2-amd64
   consumer: 2024dock/cdc-consumer:v1.0.0
   frontend: 2024dock/cdc-frontend:v1.0.2-amd64
   kowl: docker.redpanda.com/redpandadata/console:v2.5.2
