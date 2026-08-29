@@ -83,7 +83,7 @@ app.delete('/api/todos/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pgPool.query('DELETE FROM todos WHERE id = $1 RETURNING *', [id]);
+    const result = await pgPool.query('DELETE FROM  todos WHERE id = $1 RETURNING *', [id]);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Todo not found' });
     }
@@ -94,7 +94,7 @@ app.delete('/api/todos/:id', async (req, res) => {
   }
 });
 
-// Reads/Search query Elasticsearch directly (CQRS pattern)
+
 app.get('/api/todos/search', async (req, res) => {
   const query = (req.query.q || '').trim();
 
@@ -129,4 +129,4 @@ app.get('/api/todos/search', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Backend server running on a port ${PORT}`));

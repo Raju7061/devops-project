@@ -1,0 +1,58 @@
+name: Build and Push Images Only
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker-setup/backend/**'
+      - 'docker-setup/frontend/**'
+
+jobs:
+  detect-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'docker-setup/frontend/**'
+            backend:
+              - 'docker-setup/backend/**'
+
+      - name: Get Current Release Version
+        id: get_ver
+        run: |
+          # release.yaml se version extract karega
+          CURRENT_VER=$(grep 'version:' release.yaml | awk '{print $2}' | tr -d '"')
+          PATCH=$(echo $CURRENT_VER | awk -F. '{print $3}')
+          echo "IMAGE_TAG=v1.0.${PATCH}-amd64" >> $GITHUB_OUTPUT
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Frontend
+        if: steps.filter.outputs.frontend == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker-setup/frontend
+          file: ./docker-setup/frontend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: 2024dock/cdc-frontend:${{ steps.get_ver.outputs.IMAGE_TAG }}
+
+      - name: Build and Push Backend
+        if: steps.filter.outputs.backend == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker-setup/backend
+          file: ./docker-setup/backend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: 2024dock/cdc-backend:${{ steps.get_ver.outputs.IMAGE_TAG }}

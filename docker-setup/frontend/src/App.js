@@ -505,8 +505,8 @@ const styles = {
     WebkitTextFillColor: 'transparent'
   },
   subtitle: {
-    fontSize: '15px',
-    color: '#94a3b8',
+    fontSize: '18px',
+    color: '#b594b8',
     margin: 0
   },
   pipelineCard: {
