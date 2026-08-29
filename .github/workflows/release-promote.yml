@@ -1,0 +1,46 @@
+name: Release Promotion to Helm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'release.yaml'
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Chart and Values from release.yaml
+        run: |
+          # 1. release.yaml se naya version nikalo (e.g. v26.100.2)
+          NEW_RELEASE=$(grep 'version:' release.yaml | awk '{print $2}' | tr -d '"')
+          
+          # 2. Matching image tag calculate karo (e.g. v1.0.2-amd64)
+          PATCH_NUM=$(echo $NEW_RELEASE | awk -F. '{print $3}')
+          NEW_IMAGE_TAG="v1.0.${PATCH_NUM}-amd64"
+
+          echo "Bumping Helm chart to $NEW_RELEASE with images $NEW_IMAGE_TAG"
+
+          # 3. Chart.yaml update karo
+          sed -i "s/^version:.*/version: ${NEW_RELEASE}/" apps/base/cdc-platform/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${NEW_RELEASE}\"/" apps/base/cdc-platform/Chart.yaml
+
+          # 4. values.yaml me dono image versions update karo
+          sed -i "s|2024dock/cdc-frontend:.*|2024dock/cdc-frontend:${NEW_IMAGE_TAG}|g" apps/base/cdc-platform/values.yaml
+          sed -i "s|2024dock/cdc-backend:.*|2024dock/cdc-backend:${NEW_IMAGE_TAG}|g" apps/base/cdc-platform/values.yaml
+
+      - name: Commit changes to Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add apps/base/cdc-platform/Chart.yaml apps/base/cdc-platform/values.yaml
+          git commit -m "chore(deploy): promote release to $NEW_RELEASE [skip ci]"
+          git push origin main
