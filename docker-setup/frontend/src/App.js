@@ -543,7 +543,7 @@ const styles = {
   },
   modeBadge: {
     fontSize: '11px',
-    fontWeight: '700',
+    fontWeight: '650',
     padding: '3px 8px',
     borderRadius: '6px',
     background: '#1e293b',
