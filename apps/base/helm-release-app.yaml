@@ -1,21 +1,15 @@
-apiVersion: helm.toolkit.fluxcd.io/v2
+apiVersion: helm.toolkit.fluxcd.io/v2beta1 # or v2
 kind: HelmRelease
 metadata:
   name: cdc-platform
   namespace: cdc-todo-app
 spec:
-  interval: 5m
+  interval: 1m
   chart:
     spec:
-      chart: ./apps/base/cdc-platform
+      chart: apps/base/cdc-platform
       sourceRef:
         kind: GitRepository
-        name: flux-system
+        name: devops-project # your flux GitRepository name
         namespace: flux-system
-  install:
-    createNamespace: true
-  values:
-    persistence:
-      postgresSize: 2Gi
-      kafkaSize: 2Gi
-      elasticsearchSize: 2Gi
+      version: "v26.100.1" # <-- UPDATE THIS TO v26.100.1
