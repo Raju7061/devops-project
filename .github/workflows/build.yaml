@@ -1,4 +1,4 @@
-name: Build and Push Images Only
+name: Build, Push Images and Create Tag
 
 on:
   push:
@@ -11,10 +11,16 @@ on:
 jobs:
   detect-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - uses: dorny/paths-filter@v3
+      - name: Detect Changes in Directories
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -23,13 +29,32 @@ jobs:
             backend:
               - 'docker-setup/backend/**'
 
-      - name: Get Current Release Version
+      - name: Calculate Next Release and Image Tag
         id: get_ver
         run: |
-          # release.yaml se version extract karega
-          CURRENT_VER=$(grep 'version:' release.yaml | awk '{print $2}' | tr -d '"')
-          PATCH=$(echo $CURRENT_VER | awk -F. '{print $3}')
-          echo "IMAGE_TAG=v1.0.${PATCH}-amd64" >> $GITHUB_OUTPUT
+          git fetch --tags
+
+          # Get latest Git tag (v26.100.*)
+          LATEST_TAG=$(git tag -l "v26.100.*" | sort -V | tail -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            PATCH_NUM=1
+          else
+            PATCH_NUM=$(echo $LATEST_TAG | awk -F. '{print $3}')
+            PATCH_NUM=$((PATCH_NUM + 1))
+          fi
+
+          NEXT_RELEASE_TAG="v26.100.${PATCH_NUM}"
+          IMAGE_TAG="v1.0.${PATCH_NUM}-amd64"
+
+          echo "NEXT_RELEASE_TAG=$NEXT_RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "Generated Tag: $NEXT_RELEASE_TAG, Docker Tag: $IMAGE_TAG"
+
+      - name: Set up QEMU (Multi-Arch Emulation)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -37,22 +62,32 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Frontend
+      - name: Build and Push Frontend (Multi-Arch)
         if: steps.filter.outputs.frontend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./docker-setup/frontend
           file: ./docker-setup/frontend/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: 2024dock/cdc-frontend:${{ steps.get_ver.outputs.IMAGE_TAG }}
 
-      - name: Build and Push Backend
+      - name: Build and Push Backend (Multi-Arch)
         if: steps.filter.outputs.backend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./docker-setup/backend
           file: ./docker-setup/backend/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: 2024dock/cdc-backend:${{ steps.get_ver.outputs.IMAGE_TAG }}
+
+      - name: Create and Push Git Release Tag
+        if: steps.filter.outputs.frontend == 'true' || steps.filter.outputs.backend == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          TAG_NAME="${{ steps.get_ver.outputs.NEXT_RELEASE_TAG }}"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
