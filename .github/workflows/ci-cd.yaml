@@ -1,0 +1,114 @@
+name: Automated Build, Tag, and GitOps Update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker-setup/backend/**'
+      - 'docker-setup/frontend/**'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'docker-setup/frontend/**'
+            backend:
+              - 'docker-setup/backend/**'
+
+  build-and-release:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculate Release and Image Versions
+        id: versioning
+        run: |
+          LATEST_TAG=$(git tag -l "v26.100.*" | sort -V | tail -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_RELEASE_TAG="v26.100.1"
+            PATCH_NUM=1
+          else
+            PATCH_NUM=$(echo $LATEST_TAG | awk -F. '{print $3}')
+            PATCH_NUM=$((PATCH_NUM + 1))
+            NEXT_RELEASE_TAG="v26.100.${PATCH_NUM}"
+          fi
+
+          echo "NEXT_RELEASE_TAG=$NEXT_RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=v1.0.${PATCH_NUM}-amd64" >> $GITHUB_OUTPUT
+          echo "Generated Release Tag: $NEXT_RELEASE_TAG, Image Tag: v1.0.${PATCH_NUM}-amd64"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Frontend Image
+        if: needs.detect-changes.outputs.frontend == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker-setup/frontend
+          file: ./docker-setup/frontend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: 2024dock/cdc-frontend:${{ steps.versioning.outputs.IMAGE_TAG }}
+
+      - name: Build and Push Backend Image
+        if: needs.detect-changes.outputs.backend == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker-setup/backend
+          file: ./docker-setup/backend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: 2024dock/cdc-backend:${{ steps.versioning.outputs.IMAGE_TAG }}
+
+      - name: Update Helm Chart.yaml and values.yaml
+        run: |
+          IMG_TAG="${{ steps.versioning.outputs.IMAGE_TAG }}"
+          REL_TAG="${{ steps.versioning.outputs.NEXT_RELEASE_TAG }}"
+
+          sed -i "s/^version:.*/version: ${REL_TAG}/" apps/base/cdc-platform/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${REL_TAG}\"/" apps/base/cdc-platform/Chart.yaml
+
+          if [ "${{ needs.detect-changes.outputs.frontend }}" = "true" ]; then
+            sed -i "s|2024dock/cdc-frontend:.*|2024dock/cdc-frontend:${IMG_TAG}|g" apps/base/cdc-platform/values.yaml
+          fi
+
+          if [ "${{ needs.detect-changes.outputs.backend }}" = "true" ]; then
+            sed -i "s|2024dock/cdc-backend:.*|2024dock/cdc-backend:${IMG_TAG}|g" apps/base/cdc-platform/values.yaml
+          fi
+
+      - name: Commit, Push and Tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add apps/base/cdc-platform/Chart.yaml apps/base/cdc-platform/values.yaml
+          git commit -m "chore(release): bump chart to ${{ steps.versioning.outputs.NEXT_RELEASE_TAG }} [skip ci]"
+          
+          git tag ${{ steps.versioning.outputs.NEXT_RELEASE_TAG }}
+
+          git push origin main
+          git push origin ${{ steps.versioning.outputs.NEXT_RELEASE_TAG }}
