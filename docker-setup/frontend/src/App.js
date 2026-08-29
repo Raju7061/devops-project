@@ -559,7 +559,7 @@ const styles = {
   },
   node: {
     minWidth: '120px',
-    padding: '12px 10px',
+    padding: '14px 10px',
     borderRadius: '12px',
     border: '1px solid #334155',
     textAlign: 'center',
