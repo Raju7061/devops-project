@@ -1,2 +1,6 @@
 release:
-  version: "v26.100.4"
+  version: "v26.100.5"
+  imageTag: "v1.0.5-amd64"
+  updatedService:
+    frontend: true
+    backend: false
