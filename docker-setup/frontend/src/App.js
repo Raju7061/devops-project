@@ -735,7 +735,7 @@ const styles = {
     transition: 'color 0.2s ease'
   },
   todoDescText: {
-    fontSize: '12px',
+    fontSize: '16px',
     color: '#94a3b8',
     marginBottom: '4px'
   },
