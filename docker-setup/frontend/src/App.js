@@ -486,13 +486,13 @@ const styles = {
   },
   badge: {
     display: 'inline-block',
-    padding: '4px 12px',
+    padding: '5px 12px',
     borderRadius: '9999px',
     background: 'rgba(59, 130, 246, 0.15)',
     border: '1px solid #3b82f6',
     color: '#60a5fa',
     fontSize: '12px',
-    fontWeight: '600',
+    fontWeight: '650',
     marginBottom: '12px'
   },
   title: {
