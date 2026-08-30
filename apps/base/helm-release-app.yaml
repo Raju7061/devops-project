@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1 # or v2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: cdc-platform
@@ -10,6 +10,5 @@ spec:
       chart: apps/base/cdc-platform
       sourceRef:
         kind: GitRepository
-        name: devops-project # your flux GitRepository name
+        name: devops-project
         namespace: flux-system
-      version: "v26.100.1" # <-- UPDATE THIS TO v26.100.1
