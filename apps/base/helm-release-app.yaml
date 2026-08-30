@@ -10,5 +10,5 @@ spec:
       chart: apps/base/cdc-platform
       sourceRef:
         kind: GitRepository
-        name: devops-project
+        name: flux-system      # <-- Yahan "devops-project" se badal kar "flux-system" karein
         namespace: flux-system
