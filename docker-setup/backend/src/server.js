@@ -1,20 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const { Client } = require('@elastic/elasticsearch');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Dynamic PostgreSQL Pool setup with SSL support
+// PostgreSQL Connection Pool
 const pgPool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false
-        }
+        ssl: { rejectUnauthorized: false }
       }
     : {
         user: process.env.DB_USER,
@@ -22,22 +19,48 @@ const pgPool = new Pool(
         database: process.env.DB_NAME,
         password: process.env.DB_PASSWORD,
         port: Number(process.env.DB_PORT) || 5432,
-        ssl: {
-          rejectUnauthorized: false
-        }
+        ssl: { rejectUnauthorized: false }
       }
 );
 
-const esClient = new Client({
-  node: process.env.ELASTICSEARCH_URL || 'http://elasticsearch:9200'
-});
-
 // Health check endpoint
-app.get('/health', async (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Writes go directly to PostgreSQL (Debezium captures this via WAL)
+// Direct PostgreSQL Search endpoint (replaces Elasticsearch)
+app.get('/api/todos/search', async (req, res) => {
+  const query = (req.query.q || '').trim();
+
+  try {
+    let result;
+    if (query) {
+      result = await pgPool.query(
+        'SELECT * FROM todos WHERE title ILIKE $1 OR description ILIKE $1 ORDER BY id DESC',
+        [`%${query}%`]
+      );
+    } else {
+      result = await pgPool.query('SELECT * FROM todos ORDER BY id DESC');
+    }
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Search error in PostgreSQL:', err);
+    res.status(500).json({ error: err.message, hits: [] });
+  }
+});
+
+// Fallback List all todos
+app.get('/api/todos', async (req, res) => {
+  try {
+    const result = await pgPool.query('SELECT * FROM todos ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Fetch error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Insert todo into PostgreSQL
 app.post('/api/todos', async (req, res) => {
   const { title, description } = req.body;
   if (!title) {
@@ -56,13 +79,10 @@ app.post('/api/todos', async (req, res) => {
   }
 });
 
+// Update completed status
 app.put('/api/todos/:id', async (req, res) => {
   const { id } = req.params;
   const { completed } = req.body;
-
-  if (typeof completed !== 'boolean') {
-    return res.status(400).json({ error: 'Field "completed" (boolean) is required' });
-  }
 
   try {
     const result = await pgPool.query(
@@ -79,11 +99,12 @@ app.put('/api/todos/:id', async (req, res) => {
   }
 });
 
+// Delete todo
 app.delete('/api/todos/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pgPool.query('DELETE FROM  todos WHERE id = $1 RETURNING *', [id]);
+    const result = await pgPool.query('DELETE FROM todos WHERE id = $1 RETURNING *', [id]);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Todo not found' });
     }
@@ -94,39 +115,5 @@ app.delete('/api/todos/:id', async (req, res) => {
   }
 });
 
-
-app.get('/api/todos/search', async (req, res) => {
-  const query = (req.query.q || '').trim();
-
-  try {
-    const indexExists = await esClient.indices.exists({ index: 'todos' });
-    if (!indexExists) {
-      return res.json([]);
-    }
-
-    const searchQuery = query
-      ? {
-          multi_match: {
-            query,
-            fields: ['title^2', 'description']
-          }
-        }
-      : { match_all: {} };
-
-    // Compatible with modern @elastic/elasticsearch v8.x syntax
-    const result = await esClient.search({
-      index: 'todos',
-      query: searchQuery,
-      sort: [{ created_at: { order: 'desc' } }]
-    });
-
-    const hits = result.hits.hits.map(h => ({ ...h._source, id: h._id }));
-    res.json(hits);
-  } catch (err) {
-    console.error('Search error:', err);
-    res.status(500).json({ error: err.message, hits: [] });
-  }
-});
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend server running on a  port ${PORT}`));
+app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));
