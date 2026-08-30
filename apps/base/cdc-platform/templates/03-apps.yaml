@@ -133,7 +133,7 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-      nodePort: {{ .Values.nodePorts.frontend }}
+      nodePort: {{ .Values.nodePorts.frontend | int }}
 ---
 # apiVersion: apps/v1
 # kind: Deployment
@@ -171,4 +171,4 @@ spec:
 #   ports:
 #     - port: 8080
 #       targetPort: 8080
-#       nodePort: {{ .Values.nodePorts.kowl }}
+#       nodePort: {{ .Values.nodePorts.kowl | int }}
