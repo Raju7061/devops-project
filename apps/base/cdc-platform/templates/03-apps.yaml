@@ -18,6 +18,7 @@ spec:
           image: {{ .Values.images.backend }}
           imagePullPolicy: IfNotPresent
           env:
+            # 1. Pull credentials securely from Secret
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
@@ -44,12 +45,13 @@ spec:
                   name: rds-db-secret
                   key: DB_NAME
 
-            # Valid PostgreSQL SSL mode
+            # 2. Add SSL configuration for PostgreSQL
             - name: PGSSLMODE
-              value: "require"
+              value: "no-verify"
 
+            # 3. Compose DATABASE_URL with SSL parameter appended
             - name: DATABASE_URL
-              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=require"
+              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=no-verify"
           ports:
             - containerPort: 5000
 ---
@@ -65,6 +67,33 @@ spec:
     - port: 5000
       targetPort: 5000
 ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: consumer
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: consumer
+#   template:
+#     metadata:
+#       labels:
+#         app: consumer
+#     spec:
+#       containers:
+#         - name: consumer
+#           image: {{ .Values.images.consumer }}
+#           imagePullPolicy: IfNotPresent
+#           env:
+#             - name: KAFKA_BROKER
+#               value: "kafka:9092"
+#             - name: KAFKA_TOPIC
+#               value: "postgres.public.todos"
+#             - name: ELASTICSEARCH_URL
+#               value: "http://elasticsearch:9200"
+# ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,13 +121,49 @@ kind: Service
 metadata:
   name: frontend
   namespace: {{ .Values.namespace }}
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: frontend
   ports:
     - port: 80
       targetPort: 80
+      nodePort: {{ .Values.nodePorts.frontend | int }}
+---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: kowl
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: kowl
+#   template:
+#     metadata:
+#       labels:
+#         app: kowl
+#     spec:
+#       containers:
+#         - name: kowl
+#           image: {{ .Values.images.kowl }}
+#           env:
+#             - name: KAFKA_BROKERS
+#               value: "kafka:9092"
+#           ports:
+#             - containerPort: 8080
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: kowl
+#   namespace: {{ .Values.namespace }}
+# spec:
+#   type: NodePort
+#   selector:
+#     app: kowl
+#   ports:
+#     - port: 8080
+#       targetPort: 8080
+#       nodePort: {{ .Values.nodePorts.kowl | int }}
