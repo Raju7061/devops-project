@@ -6,5 +6,4 @@ resources:
   #- monitoring/helm-repositories.yaml
   #- monitoring/helm-release-monitoring.yaml
  # - monitoring/prometheus-rules-kafka.yaml
-  - base/ingress-all.yaml
   #- monitoring/servicemonitor-kafka-exporter.yaml
