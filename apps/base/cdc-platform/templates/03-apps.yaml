@@ -59,6 +59,7 @@ metadata:
   name: backend
   namespace: {{ .Values.namespace }}
 spec:
+  type: ClusterIP
   selector:
     app: backend
   ports:
