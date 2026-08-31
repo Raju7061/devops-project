@@ -9,7 +9,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
-    alb.ingress.kubernetes.io/certificate-arn: <ACM_CERT_ARN>
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:772603144983:certificate/2f9ecabd-9569-47ce-b10a-394764fd34aa
 spec:
   rules:
     - host: rajucloud.xyz
