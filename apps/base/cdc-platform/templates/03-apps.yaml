@@ -46,10 +46,10 @@ spec:
 
             # Valid PostgreSQL SSL mode
             - name: PGSSLMODE
-              value: "require"
+              value: "no-verify"
 
             - name: DATABASE_URL
-              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=require"
+              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=no-verify"
           ports:
             - containerPort: 5000
 ---
