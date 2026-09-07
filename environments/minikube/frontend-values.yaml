@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: 2024dock/cdc-frontend
   pullPolicy: IfNotPresent
-  tag: "v1.0.8-amd64"
+  tag: "v1.0.0"
 
 service:
   type: NodePort
