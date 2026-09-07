@@ -1,1 +1,35 @@
-
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: backend
+  namespace: default
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ./charts/backend
+      sourceRef:
+        kind: GitRepository
+        name: devops-project
+        namespace: flux-system
+      reconcileStrategy: Revision
+  valuesFiles:
+    - environments/minikube/backend-values.yaml
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: frontend
+  namespace: default
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ./charts/frontend
+      sourceRef:
+        kind: GitRepository
+        name: devops-project
+        namespace: flux-system
+      reconcileStrategy: Revision
+  valuesFiles:
+    - environments/minikube/frontend-values.yaml
