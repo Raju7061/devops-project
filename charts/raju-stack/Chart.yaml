@@ -1,0 +1,16 @@
+apiVersion: v2
+name: raju-stack
+description: Umbrella Chart for Microservice Stack
+version: v26.100.1
+appVersion: "v26.100.1"
+
+dependencies:
+  - name: backend
+    version: "0.1.0"
+    repository: "file://../backend"
+  - name: frontend
+    version: "0.1.0"
+    repository: "file://../frontend"
+  - name: consumer
+    version: "0.1.0"
+    repository: "file://../consumer"
