@@ -1,0 +1,135 @@
+# -----------------------------------------------------------------------------
+# Consumer Values - Minikube Environment
+# Project: Todo CDC Platform
+# Environment: Minikube
+# -----------------------------------------------------------------------------
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: 2024dock/consumer
+  tag: "v1.0.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels:
+  app: consumer
+  component: kafka-consumer
+  environment: minikube
+
+# Consumer doesn't expose HTTP traffic externally.
+service:
+  enabled: false
+  type: ClusterIP
+  port: 3001
+
+config:
+  NODE_ENV: development
+  LOG_LEVEL: info
+
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KAFKA_GROUP_ID: todo-consumer-group
+  KAFKA_CLIENT_ID: todo-consumer
+  KAFKA_TOPIC: todo.public.todos
+
+  # Debezium settings
+  DEBEZIUM_CONNECT_NAME: todo-postgres-connector
+
+  # Elasticsearch
+  ELASTICSEARCH_URL: http://elasticsearch:9200
+  ELASTICSEARCH_INDEX: todos
+
+  # Retry behaviour
+  MAX_RETRIES: "5"
+  RETRY_DELAY_MS: "3000"
+
+secret: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+livenessProbe:
+  enabled: true
+  exec:
+    command:
+      - sh
+      - -c
+      - ps aux | grep node | grep -v grep
+
+  initialDelaySeconds: 20
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  exec:
+    command:
+      - sh
+      - -c
+      - ps aux | grep node | grep -v grep
+
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+startupProbe:
+  enabled: true
+  exec:
+    command:
+      - sh
+      - -c
+      - ps aux | grep node | grep -v grep
+
+  failureThreshold: 30
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+
+  minReplicas: 1
+  maxReplicas: 3
+
+  targetCPUUtilizationPercentage: 70
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+envFromConfigMap: true
+envFromSecret: true
+
+persistence:
+  enabled: false
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+
+terminationGracePeriodSeconds: 30

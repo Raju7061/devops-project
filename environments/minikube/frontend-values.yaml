@@ -1,0 +1,195 @@
+# -----------------------------------------------------------------------------
+# Frontend Values - Minikube Environment
+# Project: Todo CDC Platform
+# Environment: Minikube
+# -----------------------------------------------------------------------------
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: 2024dock/frontend
+  tag: "v1.0.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels:
+  app: frontend
+  component: web
+  environment: minikube
+
+# -----------------------------------------------------------------------------
+# Service
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# -----------------------------------------------------------------------------
+# Ingress
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: nginx
+
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls: []
+
+# -----------------------------------------------------------------------------
+# Frontend Configuration
+# -----------------------------------------------------------------------------
+config:
+  NODE_ENV: development
+
+  # Backend API URL used by React application
+  API_BASE_URL: http://backend:8080/api
+
+  # WebSocket endpoint (future feature)
+  WS_BASE_URL: ws://backend:8080/ws
+
+  APP_NAME: Todo CDC Platform
+  APP_VERSION: v26.100.1
+
+  LOG_LEVEL: info
+
+  ENABLE_ANALYTICS: "false"
+
+secret: {}
+
+# -----------------------------------------------------------------------------
+# Resources
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# -----------------------------------------------------------------------------
+# Health Checks
+# -----------------------------------------------------------------------------
+livenessProbe:
+  enabled: true
+
+  httpGet:
+    path: /
+    port: 80
+
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+
+  httpGet:
+    path: /
+    port: 80
+
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  enabled: true
+
+  httpGet:
+    path: /
+    port: 80
+
+  failureThreshold: 30
+  periodSeconds: 10
+
+# -----------------------------------------------------------------------------
+# Horizontal Pod Autoscaler
+# -----------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+
+  minReplicas: 1
+  maxReplicas: 3
+
+  targetCPUUtilizationPercentage: 70
+
+# -----------------------------------------------------------------------------
+# Scheduling
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -----------------------------------------------------------------------------
+# ConfigMap / Secret Injection
+# -----------------------------------------------------------------------------
+envFromConfigMap: true
+envFromSecret: false
+
+# -----------------------------------------------------------------------------
+# Persistence (Not required for React + Nginx)
+# -----------------------------------------------------------------------------
+persistence:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsUser: 101
+  runAsGroup: 101
+  fsGroup: 101
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+
+terminationGracePeriodSeconds: 30
+
+# -----------------------------------------------------------------------------
+# NGINX Configuration
+# -----------------------------------------------------------------------------
+nginx:
+  workerProcesses: auto
+
+  gzip:
+    enabled: true
+
+  clientMaxBodySize: 10m
+
+  keepaliveTimeout: 65
+
+# -----------------------------------------------------------------------------
+# Frontend Environment Variables
+# These become ConfigMap entries in the Helm chart.
+# -----------------------------------------------------------------------------
+env:
+  REACT_APP_API_URL: http://backend:8080/api
+  REACT_APP_APP_NAME: Todo CDC Platform
+  REACT_APP_VERSION: v26.100.1
+  REACT_APP_ENVIRONMENT: minikube

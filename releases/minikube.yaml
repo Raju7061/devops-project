@@ -1,0 +1,171 @@
+# =============================================================================
+# Todo CDC Platform - Minikube Release
+# FluxCD HelmRelease
+# Namespace: raju
+# Environment: Minikube
+# =============================================================================
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: raju
+  labels:
+    app.kubernetes.io/name: raju-stack
+    app.kubernetes.io/part-of: todo-cdc-platform
+    app.kubernetes.io/environment: minikube
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: raju-stack
+  namespace: raju
+  labels:
+    app.kubernetes.io/name: raju-stack
+    app.kubernetes.io/environment: minikube
+
+spec:
+  interval: 5m
+
+  releaseName: raju-stack
+
+  chart:
+    spec:
+      chart: ./charts/raju-stack
+
+      sourceRef:
+        kind: GitRepository
+        name: devops-project
+        namespace: flux-system
+
+      reconcileStrategy: Revision
+
+      interval: 5m
+
+  timeout: 10m
+
+  maxHistory: 10
+
+  install:
+    createNamespace: true
+
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+
+  upgrade:
+    cleanupOnFail: true
+
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      strategy: rollback
+
+  rollback:
+    cleanupOnFail: true
+    recreate: true
+
+  uninstall:
+    keepHistory: false
+
+  driftDetection:
+    mode: enabled
+
+  values:
+    global:
+      releaseTag: "v26.100.1"
+      environment: minikube
+      namespace: raju
+
+    backend:
+      enabled: true
+      replicaCount: 1
+
+      image:
+        repository: 2024dock/backend
+        tag: "v1.0.0"
+
+      service:
+        port: 8080
+
+    frontend:
+      enabled: true
+      replicaCount: 1
+
+      image:
+        repository: 2024dock/frontend
+        tag: "v1.0.0"
+
+      service:
+        port: 80
+
+      ingress:
+        enabled: true
+        className: nginx
+
+        hosts:
+          - host: todo.local
+            paths:
+              - path: /
+                pathType: Prefix
+
+    consumer:
+      enabled: true
+      replicaCount: 1
+
+      image:
+        repository: 2024dock/consumer
+        tag: "v1.0.0"
+
+    postgres:
+      enabled: true
+      auth:
+        database: tododb
+        username: todo_user
+        password: todo_password
+
+      persistence:
+        enabled: true
+        size: 5Gi
+
+    kafka:
+      enabled: true
+      replicaCount: 1
+
+    debezium:
+      enabled: true
+      replicaCount: 1
+
+      connector:
+        name: todo-postgres-connector
+        topicPrefix: todo
+        database: tododb
+        tableIncludeList: public.todos
+
+    elasticsearch:
+      enabled: true
+
+      replicas: 1
+
+      persistence:
+        enabled: true
+        size: 10Gi
+
+    kibana:
+      enabled: true
+
+      replicas: 1
+
+      service:
+        port: 5601
+
+    monitoring:
+      prometheus:
+        enabled: true
+
+      grafana:
+        enabled: true
+
+        adminUser: admin
+        adminPassword: admin123
