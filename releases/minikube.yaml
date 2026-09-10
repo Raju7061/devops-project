@@ -83,7 +83,7 @@ spec:
       replicaCount: 1
 
       image:
-        repository: 2024dock/backend
+        repository: 2024dock/cdc-backend
         tag: "v1.0.0"
 
       service:
@@ -94,7 +94,7 @@ spec:
       replicaCount: 1
 
       image:
-        repository: 2024dock/frontend
+        repository: 2024dock/cdc-frontend
         tag: "v1.0.0"
 
       service:
@@ -115,7 +115,7 @@ spec:
       replicaCount: 1
 
       image:
-        repository: 2024dock/consumer
+        repository: 2024dock/cdc-consumer
         tag: "v1.0.0"
 
     postgres:
