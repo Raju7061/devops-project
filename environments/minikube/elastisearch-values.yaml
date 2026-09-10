@@ -1,0 +1,220 @@
+# =============================================================================
+# Elasticsearch Values - Minikube Environment
+# Project: Todo CDC Platform
+# Environment: Minikube
+# Elasticsearch 8.15.3
+# =============================================================================
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  tag: "8.15.3"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels:
+  app: elasticsearch
+  component: search
+  environment: minikube
+
+# -----------------------------------------------------------------------------
+# Service
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 9200
+  transportPort: 9300
+
+# -----------------------------------------------------------------------------
+# Elasticsearch Configuration
+# -----------------------------------------------------------------------------
+config:
+  cluster.name: todo-cdc-cluster
+  node.name: elasticsearch-0
+
+  discovery.type: single-node
+
+  network.host: 0.0.0.0
+
+  xpack.security.enabled: "false"
+  xpack.security.enrollment.enabled: "false"
+
+  xpack.monitoring.collection.enabled: "true"
+
+  bootstrap.memory_lock: "true"
+
+  ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
+env:
+  discovery.type: single-node
+
+  ELASTIC_PASSWORD: ""
+
+  ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+  cluster.name: todo-cdc-cluster
+
+# -----------------------------------------------------------------------------
+# Persistence
+# -----------------------------------------------------------------------------
+persistence:
+  enabled: true
+
+  storageClass: standard
+
+  accessModes:
+    - ReadWriteOnce
+
+  size: 10Gi
+
+# -----------------------------------------------------------------------------
+# Resources
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
+# -----------------------------------------------------------------------------
+# Health Checks
+# -----------------------------------------------------------------------------
+livenessProbe:
+  enabled: true
+
+  httpGet:
+    path: /_cluster/health
+    port: 9200
+
+  initialDelaySeconds: 60
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: true
+
+  httpGet:
+    path: /_cluster/health?wait_for_status=yellow&timeout=5s
+    port: 9200
+
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  enabled: true
+
+  httpGet:
+    path: /_cluster/health
+    port: 9200
+
+  periodSeconds: 10
+  failureThreshold: 60
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+
+# -----------------------------------------------------------------------------
+# Node Scheduling
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -----------------------------------------------------------------------------
+# Volume Configuration
+# -----------------------------------------------------------------------------
+volumePermissions:
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Metrics (Prometheus Exporter)
+# -----------------------------------------------------------------------------
+metrics:
+  enabled: true
+
+  image:
+    repository: quay.io/prometheuscommunity/elasticsearch-exporter
+    tag: "v1.7.0"
+
+  service:
+    port: 9114
+
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+
+# -----------------------------------------------------------------------------
+# Snapshot Repository (Future AWS S3 Backup)
+# -----------------------------------------------------------------------------
+snapshot:
+  enabled: false
+
+  repository: todo-backups
+
+  bucket: ""
+
+  region: ""
+
+# -----------------------------------------------------------------------------
+# Index Configuration
+# -----------------------------------------------------------------------------
+indices:
+  todos:
+    numberOfShards: 1
+    numberOfReplicas: 0
+
+    refreshInterval: 1s
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+logging:
+  level: INFO
+
+  rootLogger: INFO
+
+# -----------------------------------------------------------------------------
+# Heap Dump Configuration
+# -----------------------------------------------------------------------------
+heapDump:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Sysctl Init Container
+# Required for Elasticsearch
+# -----------------------------------------------------------------------------
+sysctl:
+  enabled: true
+
+  vmMaxMapCount: 262144

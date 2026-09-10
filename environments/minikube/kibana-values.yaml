@@ -1,0 +1,200 @@
+# =============================================================================
+# Kibana Values - Minikube Environment
+# Project: Todo CDC Platform
+# Environment: Minikube
+# Kibana 8.15.3
+# =============================================================================
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: docker.elastic.co/kibana/kibana
+  tag: "8.15.3"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels:
+  app: kibana
+  component: dashboard
+  environment: minikube
+
+# -----------------------------------------------------------------------------
+# Service
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 5601
+  targetPort: 5601
+
+# -----------------------------------------------------------------------------
+# Kibana Configuration
+# -----------------------------------------------------------------------------
+config:
+  SERVER_NAME: kibana
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: "5601"
+
+  ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+
+  MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: "true"
+
+  TELEMETRY_ENABLED: "false"
+
+  NEWSFEED_ENABLED: "false"
+
+  LOGGING_ROOT_LEVEL: info
+
+  I18N_LOCALE: en
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
+env:
+  SERVER_NAME: kibana
+
+  SERVER_HOST: "0.0.0.0"
+
+  ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+
+  NODE_OPTIONS: "--max-old-space-size=512"
+
+# -----------------------------------------------------------------------------
+# Ingress
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: true
+
+  className: nginx
+
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+  hosts:
+    - host: kibana.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls: []
+
+# -----------------------------------------------------------------------------
+# Resources
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# Health Checks
+# -----------------------------------------------------------------------------
+livenessProbe:
+  enabled: true
+
+  httpGet:
+    path: /api/status
+    port: 5601
+
+  initialDelaySeconds: 60
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: true
+
+  httpGet:
+    path: /api/status
+    port: 5601
+
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  enabled: true
+
+  httpGet:
+    path: /api/status
+    port: 5601
+
+  periodSeconds: 10
+  failureThreshold: 60
+
+# -----------------------------------------------------------------------------
+# Persistence
+# -----------------------------------------------------------------------------
+persistence:
+  enabled: true
+
+  storageClass: standard
+
+  accessModes:
+    - ReadWriteOnce
+
+  size: 2Gi
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+
+# -----------------------------------------------------------------------------
+# Scheduling
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -----------------------------------------------------------------------------
+# Metrics
+# -----------------------------------------------------------------------------
+metrics:
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+logging:
+  level: info
+
+# -----------------------------------------------------------------------------
+# Fleet (Disabled for this project)
+# -----------------------------------------------------------------------------
+fleet:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Dashboard Import (Optional)
+# -----------------------------------------------------------------------------
+dashboards:
+  enabled: true
+
+  indexPattern: todos
+
+  defaultDashboard: todo-cdc-overview

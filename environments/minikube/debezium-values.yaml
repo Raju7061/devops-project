@@ -1,0 +1,242 @@
+# =============================================================================
+# Debezium Values - Minikube Environment
+# Project: Todo CDC Platform
+# Environment: Minikube
+# Debezium Connect 3.2 + PostgreSQL CDC + Kafka
+# =============================================================================
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: quay.io/debezium/connect
+  tag: "3.2"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels:
+  app: debezium
+  component: kafka-connect
+  environment: minikube
+
+# -----------------------------------------------------------------------------
+# Service
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 8083
+  targetPort: 8083
+
+# -----------------------------------------------------------------------------
+# Kafka Connect Configuration
+# -----------------------------------------------------------------------------
+connect:
+  groupId: "todo-connect-cluster"
+
+  configStorageTopic: "connect-configs"
+  offsetStorageTopic: "connect-offsets"
+  statusStorageTopic: "connect-status"
+
+  configStorageReplicationFactor: 1
+  offsetStorageReplicationFactor: 1
+  statusStorageReplicationFactor: 1
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
+env:
+  BOOTSTRAP_SERVERS: kafka:9092
+
+  GROUP_ID: todo-connect-cluster
+
+  CONFIG_STORAGE_TOPIC: connect-configs
+  OFFSET_STORAGE_TOPIC: connect-offsets
+  STATUS_STORAGE_TOPIC: connect-status
+
+  CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+  OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+  STATUS_STORAGE_REPLICATION_FACTOR: "1"
+
+  KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+  VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+
+  KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+  VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+
+  REST_ADVERTISED_HOST_NAME: debezium
+  REST_PORT: "8083"
+
+  PLUGIN_PATH: /kafka/connect,/debezium/connectors
+
+  LOG_LEVEL: INFO
+
+# -----------------------------------------------------------------------------
+# PostgreSQL Source Connector
+# -----------------------------------------------------------------------------
+connector:
+  enabled: true
+
+  name: todo-postgres-connector
+
+  config:
+    connector.class: io.debezium.connector.postgresql.PostgresConnector
+
+    database.hostname: postgres
+    database.port: "5432"
+    database.user: debezium
+    database.password: debezium_password
+    database.dbname: tododb
+
+    topic.prefix: todo
+
+    plugin.name: pgoutput
+
+    publication.name: todo_publication
+    slot.name: todo_debezium_slot
+
+    snapshot.mode: initial
+
+    table.include.list: public.todos
+
+    include.schema.changes: "false"
+
+    heartbeat.interval.ms: "10000"
+
+    tombstones.on.delete: "false"
+
+    decimal.handling.mode: string
+
+    time.precision.mode: connect
+
+    key.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+
+    key.converter.schemas.enable: "false"
+    value.converter.schemas.enable: "false"
+
+    transforms: unwrap
+
+    transforms.unwrap.type: io.debezium.transforms.ExtractNewRecordState
+
+    transforms.unwrap.drop.tombstones: "true"
+
+    transforms.unwrap.delete.handling.mode: rewrite
+
+# -----------------------------------------------------------------------------
+# Connector Auto Registration
+# -----------------------------------------------------------------------------
+autoRegisterConnector:
+  enabled: true
+
+  retryCount: 30
+  retryIntervalSeconds: 10
+
+# -----------------------------------------------------------------------------
+# Resources
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# Health Checks
+# -----------------------------------------------------------------------------
+livenessProbe:
+  enabled: true
+
+  httpGet:
+    path: /
+    port: 8083
+
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: true
+
+  httpGet:
+    path: /connectors
+    port: 8083
+
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  enabled: true
+
+  httpGet:
+    path: /
+    port: 8083
+
+  periodSeconds: 10
+  failureThreshold: 30
+
+# -----------------------------------------------------------------------------
+# Persistence
+# -----------------------------------------------------------------------------
+persistence:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+
+# -----------------------------------------------------------------------------
+# Scheduling
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -----------------------------------------------------------------------------
+# Metrics (Prometheus JMX Exporter)
+# -----------------------------------------------------------------------------
+metrics:
+  enabled: true
+
+  image:
+    repository: bitnami/jmx-exporter
+    tag: "0.20.0"
+
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+logging:
+  level: INFO
+
+  loggers:
+    io.debezium: INFO
+    org.apache.kafka.connect.runtime: INFO
+    org.apache.kafka.clients: WARN

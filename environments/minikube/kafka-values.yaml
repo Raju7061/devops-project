@@ -1,0 +1,240 @@
+# =============================================================================
+# Kafka Values - Minikube Environment
+# Project: Todo CDC Platform
+# Environment: Minikube
+# Apache Kafka 4.x (KRaft Mode)
+# =============================================================================
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: apache/kafka
+  tag: "4.0.1"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels:
+  app: kafka
+  component: message-broker
+  environment: minikube
+
+# -----------------------------------------------------------------------------
+# Service
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 9092
+  targetPort: 9092
+
+controllerService:
+  type: ClusterIP
+  port: 9093
+  targetPort: 9093
+
+# -----------------------------------------------------------------------------
+# Kafka KRaft Configuration
+# -----------------------------------------------------------------------------
+kraft:
+  enabled: true
+
+  clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+
+  nodeId: 1
+
+  processRoles: "broker,controller"
+
+  controllerQuorumVoters: "1@kafka:9093"
+
+# -----------------------------------------------------------------------------
+# Kafka Broker Configuration
+# -----------------------------------------------------------------------------
+config:
+  KAFKA_NODE_ID: "1"
+
+  KAFKA_PROCESS_ROLES: "broker,controller"
+
+  KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+
+  KAFKA_LISTENERS: |
+    PLAINTEXT://0.0.0.0:9092,
+    CONTROLLER://0.0.0.0:9093
+
+  KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: |
+    PLAINTEXT:PLAINTEXT,
+    CONTROLLER:PLAINTEXT
+
+  KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+
+  KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  KAFKA_NUM_PARTITIONS: "3"
+
+  KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+
+  KAFKA_MIN_INSYNC_REPLICAS: "1"
+
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+
+  KAFKA_DELETE_TOPIC_ENABLE: "true"
+
+  KAFKA_LOG_RETENTION_HOURS: "168"
+
+  KAFKA_LOG_SEGMENT_BYTES: "1073741824"
+
+  KAFKA_MESSAGE_MAX_BYTES: "10485760"
+
+# -----------------------------------------------------------------------------
+# Topics Created Automatically
+# -----------------------------------------------------------------------------
+topics:
+  - name: todo.public.todos
+    partitions: 3
+    replicationFactor: 1
+
+  - name: todo.public.todos.schema-changes
+    partitions: 1
+    replicationFactor: 1
+
+# -----------------------------------------------------------------------------
+# Persistence
+# -----------------------------------------------------------------------------
+persistence:
+  enabled: true
+
+  storageClass: standard
+
+  accessModes:
+    - ReadWriteOnce
+
+  size: 10Gi
+
+# -----------------------------------------------------------------------------
+# Resources
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# Health Checks
+# -----------------------------------------------------------------------------
+livenessProbe:
+  enabled: true
+
+  tcpSocket:
+    port: 9092
+
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: true
+
+  tcpSocket:
+    port: 9092
+
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  enabled: true
+
+  tcpSocket:
+    port: 9092
+
+  periodSeconds: 10
+  failureThreshold: 30
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+
+# -----------------------------------------------------------------------------
+# Scheduling
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -----------------------------------------------------------------------------
+# Metrics (Prometheus JMX Exporter)
+# -----------------------------------------------------------------------------
+metrics:
+  enabled: true
+
+  image:
+    repository: bitnami/jmx-exporter
+    tag: "0.20.0"
+
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+
+# -----------------------------------------------------------------------------
+# Log Configuration
+# -----------------------------------------------------------------------------
+logging:
+  logLevel: INFO
+
+  log4j:
+    rootLogger: INFO
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
+env:
+  KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+
+  JVM_PERFORMANCE_OPTS: |
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=20
+    -XX:InitiatingHeapOccupancyPercent=35
+
+# -----------------------------------------------------------------------------
+# Init Topic Job (Optional)
+# -----------------------------------------------------------------------------
+initTopics:
+  enabled: true
+
+  topics:
+    - todo.public.todos
+    - todo.public.todos.schema-changes
