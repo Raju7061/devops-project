@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ include "backend.fullname" . }}-config
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+
+data:
+  NODE_ENV: {{ .Values.config.NODE_ENV | quote }}
+  PORT: {{ .Values.config.PORT | quote }}
+  LOG_LEVEL: {{ .Values.config.LOG_LEVEL | quote }}
+  API_PREFIX: {{ .Values.config.API_PREFIX | quote }}
+
+  POSTGRES_HOST: {{ .Values.config.POSTGRES_HOST | quote }}
+  POSTGRES_PORT: {{ .Values.config.POSTGRES_PORT | quote }}
+  POSTGRES_DB: {{ .Values.config.POSTGRES_DB | quote }}
+
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.config.KAFKA_BOOTSTRAP_SERVERS | quote }}
+  KAFKA_TOPIC: {{ .Values.config.KAFKA_TOPIC | quote }}
+
+  ELASTICSEARCH_URL: {{ .Values.config.ELASTICSEARCH_URL | quote }}
+  ELASTICSEARCH_INDEX: {{ .Values.config.ELASTICSEARCH_INDEX | quote }}
