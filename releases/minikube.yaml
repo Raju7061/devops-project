@@ -36,7 +36,7 @@ spec:
 
       sourceRef:
         kind: GitRepository
-        name: devops-project
+        name: flux-system
         namespace: flux-system
 
       reconcileStrategy: Revision
