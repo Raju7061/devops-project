@@ -10,7 +10,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  repository: 2024dock/consumer
+  repository: 2024dock/cdc-consumer
   tag: "v1.0.0"
   pullPolicy: IfNotPresent
 

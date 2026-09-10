@@ -10,7 +10,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  repository: 2024dock/backend
+  repository: 2024dock/cdc-backend
   tag: "v1.0.0"
   pullPolicy: IfNotPresent
 
