@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ include "consumer.fullname" . }}-config
+  labels:
+    {{- include "consumer.labels" . | nindent 4 }}
+
+data:
+  NODE_ENV: {{ .Values.config.NODE_ENV | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.config.KAFKA_BOOTSTRAP_SERVERS | quote }}
+  KAFKA_TOPIC: {{ .Values.config.KAFKA_TOPIC | quote }}
+  ELASTICSEARCH_URL: {{ .Values.config.ELASTICSEARCH_URL | quote }}
+  ELASTICSEARCH_INDEX: {{ .Values.config.ELASTICSEARCH_INDEX | quote }}
+  GROUP_ID: {{ .Values.config.GROUP_ID | quote }}
