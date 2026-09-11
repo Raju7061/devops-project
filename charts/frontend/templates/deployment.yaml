@@ -37,6 +37,8 @@ spec:
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
 
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+
       containers:
         - name: frontend
 
@@ -52,17 +54,30 @@ spec:
               protocol: TCP
 
           # Environment variables from ConfigMap
+          {{- if .Values.envFromConfigMap }}
           envFrom:
             - configMapRef:
                 name: {{ include "frontend.fullname" . }}-config
+          {{- end }}
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
           volumeMounts:
+            # Custom NGINX configuration
             - name: nginx-config
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
+
+            # Writable directories for nginx
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+
+            - name: nginx-run
+              mountPath: /var/run
+
+            - name: nginx-tmp
+              mountPath: /tmp
 
           startupProbe:
             httpGet:
@@ -90,9 +105,20 @@ spec:
             failureThreshold: 3
 
       volumes:
+        # NGINX ConfigMap
         - name: nginx-config
           configMap:
             name: {{ include "frontend.fullname" . }}-nginx
+
+        # Writable volumes required by nginx
+        - name: nginx-cache
+          emptyDir: {}
+
+        - name: nginx-run
+          emptyDir: {}
+
+        - name: nginx-tmp
+          emptyDir: {}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

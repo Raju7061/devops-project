@@ -1,14 +1,17 @@
-# -----------------------------------------------------------------------------
-# Frontend Values - Minikube Environment
-# Project: Todo CDC Platform
-# Environment: Minikube
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Todo CDC Platform
+# Frontend Values (Minikube)
+# Production Ready
+# =============================================================================
 
 replicaCount: 1
 
 nameOverride: ""
 fullnameOverride: ""
 
+# -----------------------------------------------------------------------------
+# Docker Image
+# -----------------------------------------------------------------------------
 image:
   repository: 2024dock/cdc-frontend
   tag: "v1.0.0"
@@ -16,16 +19,22 @@ image:
 
 imagePullSecrets: []
 
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
 serviceAccount:
   create: true
   annotations: {}
   name: ""
 
+# -----------------------------------------------------------------------------
+# Pod Metadata
+# -----------------------------------------------------------------------------
 podAnnotations: {}
 
 podLabels:
   app: frontend
-  component: web
+  component: ui
   environment: minikube
 
 # -----------------------------------------------------------------------------
@@ -59,20 +68,30 @@ ingress:
 # Frontend Configuration
 # -----------------------------------------------------------------------------
 config:
-  NODE_ENV: development
+  NODE_ENV: production
 
-  # Backend API URL used by React application
-  API_BASE_URL: http://backend:8080/api
-
-  # WebSocket endpoint (future feature)
-  WS_BASE_URL: ws://backend:8080/ws
-
-  APP_NAME: Todo CDC Platform
-  APP_VERSION: v26.100.1
+  APP_NAME: "Todo CDC Platform"
+  APP_VERSION: "v26.100.1"
 
   LOG_LEVEL: info
-
   ENABLE_ANALYTICS: "false"
+
+  API_BASE_URL: "http://raju-stack-backend:8080/api"
+  WS_BASE_URL: "ws://raju-stack-backend:8080/ws"
+
+  REACT_APP_ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  REACT_APP_KIBANA_URL: "http://kibana:5601"h
+# -----------------------------------------------------------------------------
+# Environment Variables (React)
+# -----------------------------------------------------------------------------
+env:
+  REACT_APP_API_URL: "http://raju-stack-backend:8080/api"
+  REACT_APP_APP_NAME: "Todo CDC Platform"
+  REACT_APP_VERSION: "v26.100.1"
+  REACT_APP_ENVIRONMENT: "minikube"
+
+envFromConfigMap: true
+envFromSecret: false
 
 secret: {}
 
@@ -85,55 +104,47 @@ resources:
     memory: 64Mi
 
   limits:
-    cpu: 200m
+    cpu: 300m
     memory: 256Mi
 
 # -----------------------------------------------------------------------------
-# Health Checks
+# Health Probes
 # -----------------------------------------------------------------------------
-livenessProbe:
+startupProbe:
   enabled: true
-
   httpGet:
     path: /
     port: 80
-
-  initialDelaySeconds: 15
+  failureThreshold: 30
   periodSeconds: 10
-  timeoutSeconds: 3
-  failureThreshold: 3
 
 readinessProbe:
   enabled: true
-
   httpGet:
     path: /
     port: 80
-
   initialDelaySeconds: 5
   periodSeconds: 5
   timeoutSeconds: 3
   failureThreshold: 3
 
-startupProbe:
+livenessProbe:
   enabled: true
-
   httpGet:
     path: /
     port: 80
-
-  failureThreshold: 30
+  initialDelaySeconds: 20
   periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
 
 # -----------------------------------------------------------------------------
-# Horizontal Pod Autoscaler
+# Autoscaling
 # -----------------------------------------------------------------------------
 autoscaling:
-  enabled: true
-
+  enabled: false
   minReplicas: 1
   maxReplicas: 3
-
   targetCPUUtilizationPercentage: 70
 
 # -----------------------------------------------------------------------------
@@ -141,38 +152,27 @@ autoscaling:
 # -----------------------------------------------------------------------------
 nodeSelector: {}
 
-tolerations: []
-
 affinity: {}
 
-# -----------------------------------------------------------------------------
-# ConfigMap / Secret Injection
-# -----------------------------------------------------------------------------
-envFromConfigMap: true
-envFromSecret: false
+tolerations: []
 
 # -----------------------------------------------------------------------------
-# Persistence (Not required for React + Nginx)
-# -----------------------------------------------------------------------------
-persistence:
-  enabled: false
-
-# -----------------------------------------------------------------------------
-# Security Context
+# Security Context (NGINX runs as UID 101)
 # -----------------------------------------------------------------------------
 securityContext:
-  runAsUser: 101
-  runAsGroup: 101
   fsGroup: 101
 
 containerSecurityContext:
+  runAsUser: 101
+  runAsGroup: 101
+  runAsNonRoot: true
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: false
 
 terminationGracePeriodSeconds: 30
 
 # -----------------------------------------------------------------------------
-# NGINX Configuration
+# NGINX Settings
 # -----------------------------------------------------------------------------
 nginx:
   workerProcesses: auto
@@ -185,11 +185,7 @@ nginx:
   keepaliveTimeout: 65
 
 # -----------------------------------------------------------------------------
-# Frontend Environment Variables
-# These become ConfigMap entries in the Helm chart.
+# Persistence
 # -----------------------------------------------------------------------------
-env:
-  REACT_APP_API_URL: http://backend:8080/api
-  REACT_APP_APP_NAME: Todo CDC Platform
-  REACT_APP_VERSION: v26.100.1
-  REACT_APP_ENVIRONMENT: minikube
+persistence:
+  enabled: false
