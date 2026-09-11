@@ -54,7 +54,9 @@ spec:
             - name: postgres
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-
+          envFrom:
+            - configMapRef:
+                name: {{ include "postgres.fullname" . }}-config
           env:
             - name: POSTGRES_DB
               valueFrom:
