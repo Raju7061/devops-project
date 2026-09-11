@@ -1,12 +1,29 @@
 apiVersion: v1
 kind: ConfigMap
+
 metadata:
   name: {{ include "frontend.fullname" . }}-config
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
 
 data:
+  # Application configuration
   NODE_ENV: {{ .Values.config.NODE_ENV | quote }}
-  REACT_APP_API_URL: {{ .Values.config.REACT_APP_API_URL | quote }}
-  REACT_APP_ELASTICSEARCH_URL: {{ .Values.config.REACT_APP_ELASTICSEARCH_URL | quote }}
-  REACT_APP_KIBANA_URL: {{ .Values.config.REACT_APP_KIBANA_URL | quote }}
+  APP_NAME: {{ .Values.config.APP_NAME | quote }}
+  APP_VERSION: {{ .Values.config.APP_VERSION | quote }}
+  LOG_LEVEL: {{ .Values.config.LOG_LEVEL | quote }}
+  ENABLE_ANALYTICS: {{ .Values.config.ENABLE_ANALYTICS | quote }}
+
+  # Backend API
+  API_BASE_URL: {{ .Values.config.API_BASE_URL | quote }}
+  WS_BASE_URL: {{ .Values.config.WS_BASE_URL | quote }}
+
+  # React environment variables
+  REACT_APP_API_URL: {{ .Values.config.API_BASE_URL | quote }}
+  REACT_APP_APP_NAME: {{ .Values.config.APP_NAME | quote }}
+  REACT_APP_VERSION: {{ .Values.config.APP_VERSION | quote }}
+  REACT_APP_ENVIRONMENT: "minikube"
+
+  # Optional CDC stack URLs
+  REACT_APP_ELASTICSEARCH_URL: {{ default "http://elasticsearch:9200" .Values.config.REACT_APP_ELASTICSEARCH_URL | quote }}
+  REACT_APP_KIBANA_URL: {{ default "http://kibana:5601" .Values.config.REACT_APP_KIBANA_URL | quote }}
