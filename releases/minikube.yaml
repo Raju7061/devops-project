@@ -51,20 +51,16 @@ spec:
     createNamespace: true
 
     remediation:
-      retries: 3
-      remediateLastFailure: true
+      retries: 1
+      remediateLastFailure: false
 
   upgrade:
-    cleanupOnFail: true
+    cleanupOnFail: false
 
     remediation:
-      retries: 3
-      remediateLastFailure: true
+      retries: 1
+      remediateLastFailure: false
       strategy: rollback
-
-  rollback:
-    cleanupOnFail: true
-    recreate: true
 
   uninstall:
     keepHistory: false
