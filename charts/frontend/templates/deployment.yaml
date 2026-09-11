@@ -1,5 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: {{ include "frontend.fullname" . }}
   labels:
@@ -38,7 +39,8 @@ spec:
 
       containers:
         - name: frontend
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           securityContext:
@@ -49,6 +51,7 @@ spec:
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
 
+          # Environment variables from ConfigMap
           envFrom:
             - configMapRef:
                 name: {{ include "frontend.fullname" . }}-config
@@ -56,13 +59,17 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
-          livenessProbe:
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+
+          startupProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 15
+            failureThreshold: 30
             periodSeconds: 10
-            timeoutSeconds: 3
 
           readinessProbe:
             httpGet:
@@ -71,13 +78,21 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 3
+            failureThreshold: 3
 
-          startupProbe:
+          livenessProbe:
             httpGet:
               path: /
               port: http
+            initialDelaySeconds: 20
             periodSeconds: 10
-            failureThreshold: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ include "frontend.fullname" . }}-nginx
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
