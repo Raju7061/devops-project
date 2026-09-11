@@ -12,3 +12,6 @@ dependencies:
 - name: consumer
   repository: file://../consumer
   version: 0.1.0
+- name: postgres
+  repository: "file://../postgres"
+  version: "0.1.0"

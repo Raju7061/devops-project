@@ -8,5 +8,8 @@ dependencies:
 - name: consumer
   repository: file://../consumer
   version: 0.1.0
-digest: sha256:7fe863a836198d0a9ed0433b99d86e7b2049ae26363d81f4c1834c4f32d1268c
-generated: "2026-09-11T02:23:52.29908+05:30"
+- name: postgres
+  repository: file://../postgres
+  version: 0.1.0
+digest: sha256:55c6731269570e35656ac4c0b54198cce4c2a6c40a9ab16cfeadd92f90985453
+generated: "2026-09-12T01:58:00.163177+05:30"
