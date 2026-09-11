@@ -1,260 +1,27 @@
-# =============================================================================
-# PostgreSQL Values - Minikube Environment
-# Project: Todo CDC Platform
-# Environment: Minikube
-# PostgreSQL 15 + Debezium Logical Replication
-# =============================================================================
-
 replicaCount: 1
-
-nameOverride: ""
-fullnameOverride: ""
 
 image:
   repository: postgres
-  tag: "15.8-alpine"
-  pullPolicy: IfNotPresent
+  tag: "16.4"
 
-imagePullSecrets: []
-
-serviceAccount:
-  create: true
-  annotations: {}
-  name: ""
-
-podAnnotations: {}
-
-podLabels:
-  app: postgres
-  component: database
-  environment: minikube
-
-# -----------------------------------------------------------------------------
-# Service
-# -----------------------------------------------------------------------------
 service:
   type: ClusterIP
   port: 5432
-  targetPort: 5432
 
-# -----------------------------------------------------------------------------
-# PostgreSQL Authentication
-# -----------------------------------------------------------------------------
 auth:
   database: tododb
   username: todo_user
   password: todo_password
-  postgresPassword: postgres_admin_password
 
-# -----------------------------------------------------------------------------
-# Debezium Replication User
-# -----------------------------------------------------------------------------
-replication:
-  enabled: true
-  username: debezium
-  password: debezium_password
-
-# -----------------------------------------------------------------------------
-# PostgreSQL Configuration
-# -----------------------------------------------------------------------------
-postgresql:
-  config:
-    wal_level: logical
-    max_wal_senders: "10"
-    max_replication_slots: "10"
-    wal_keep_size: "512MB"
-
-    shared_buffers: "256MB"
-    work_mem: "16MB"
-    maintenance_work_mem: "64MB"
-
-    checkpoint_timeout: "15min"
-    checkpoint_completion_target: "0.9"
-
-    synchronous_commit: "off"
-
-    log_connections: "on"
-    log_disconnections: "on"
-    log_statement: "ddl"
-
-# -----------------------------------------------------------------------------
-# Initialization SQL Scripts
-# -----------------------------------------------------------------------------
-initdb:
-  enabled: true
-
-  scripts:
-    01-create-database.sql: |
-      CREATE DATABASE tododb;
-
-    02-create-user.sql: |
-      CREATE USER todo_user WITH PASSWORD 'todo_password';
-      GRANT ALL PRIVILEGES ON DATABASE tododb TO todo_user;
-
-    03-create-debezium-user.sql: |
-      CREATE USER debezium WITH REPLICATION PASSWORD 'debezium_password';
-
-      GRANT CONNECT ON DATABASE tododb TO debezium;
-
-    04-grants.sql: |
-      \connect tododb;
-
-      GRANT USAGE ON SCHEMA public TO todo_user;
-      GRANT CREATE ON SCHEMA public TO todo_user;
-
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public
-      GRANT ALL ON TABLES TO todo_user;
-
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public
-      GRANT ALL ON SEQUENCES TO todo_user;
-
-      GRANT USAGE ON SCHEMA public TO debezium;
-
-      GRANT SELECT ON ALL TABLES IN SCHEMA public TO debezium;
-
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public
-      GRANT SELECT ON TABLES TO debezium;
-
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public
-      GRANT USAGE, SELECT ON SEQUENCES TO debezium;
-
-    05-publication.sql: |
-      \connect tododb;
-
-      CREATE TABLE IF NOT EXISTS todos (
-          id SERIAL PRIMARY KEY,
-          title VARCHAR(255) NOT NULL,
-          description TEXT,
-          completed BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      ALTER TABLE todos OWNER TO todo_user;
-
-      CREATE PUBLICATION todo_publication
-      FOR TABLE public.todos;
-
-# -----------------------------------------------------------------------------
-# Environment Variables
-# -----------------------------------------------------------------------------
-env:
-  POSTGRES_DB: tododb
-  POSTGRES_USER: todo_user
-  POSTGRES_PASSWORD: todo_password
-
-# -----------------------------------------------------------------------------
-# Persistence
-# -----------------------------------------------------------------------------
 persistence:
   enabled: true
-
   storageClass: standard
+  size: 5Gi
 
-  accessModes:
-    - ReadWriteOnce
-
-  size: 10Gi
-
-# -----------------------------------------------------------------------------
-# Resources
-# -----------------------------------------------------------------------------
 resources:
   requests:
     cpu: 250m
-    memory: 512Mi
-
+    memory: 256Mi
   limits:
-    cpu: "1"
-    memory: 1Gi
-
-# -----------------------------------------------------------------------------
-# Health Probes
-# -----------------------------------------------------------------------------
-livenessProbe:
-  enabled: true
-
-  exec:
-    command:
-      - sh
-      - -c
-      - pg_isready -U postgres
-
-  initialDelaySeconds: 30
-  periodSeconds: 15
-  timeoutSeconds: 5
-  failureThreshold: 5
-
-readinessProbe:
-  enabled: true
-
-  exec:
-    command:
-      - sh
-      - -c
-      - pg_isready -U postgres -d tododb
-
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 5
-
-startupProbe:
-  enabled: true
-
-  exec:
-    command:
-      - sh
-      - -c
-      - pg_isready -U postgres
-
-  periodSeconds: 10
-  failureThreshold: 30
-
-# -----------------------------------------------------------------------------
-# Security Context
-# -----------------------------------------------------------------------------
-securityContext:
-  runAsUser: 999
-  runAsGroup: 999
-  fsGroup: 999
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-
-# -----------------------------------------------------------------------------
-# Node Scheduling
-# -----------------------------------------------------------------------------
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-# -----------------------------------------------------------------------------
-# Metrics (Prometheus)
-# -----------------------------------------------------------------------------
-metrics:
-  enabled: true
-
-  image:
-    repository: prometheuscommunity/postgres-exporter
-    tag: "v0.15.0"
-
-  serviceMonitor:
-    enabled: true
-    interval: 30s
-
-# -----------------------------------------------------------------------------
-# Backup Configuration (Future AWS/S3)
-# -----------------------------------------------------------------------------
-backup:
-  enabled: false
-
-  schedule: "0 2 * * *"
-
-  retentionDays: 7
-
-  s3:
-    bucket: ""
-    region: ""
+    cpu: 500m
+    memory: 512Mi

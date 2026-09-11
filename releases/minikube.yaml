@@ -116,6 +116,11 @@ spec:
 
     postgres:
       enabled: true
+      image:
+        repository: postgres
+        tag: "16.4"
+      service:
+        port: 5432
       auth:
         database: tododb
         username: todo_user
