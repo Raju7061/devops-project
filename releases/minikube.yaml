@@ -84,6 +84,25 @@ spec:
 
       service:
         port: 8080
+      config:
+        NODE_ENV: development
+        PORT: "8080"
+        LOG_LEVEL: info
+        API_PREFIX: /api
+
+        POSTGRES_HOST: raju-stack-postgres
+        POSTGRES_PORT: "5432"
+        POSTGRES_DB: tododb
+
+        KAFKA_BOOTSTRAP_SERVERS: ""
+        KAFKA_TOPIC: ""
+
+        ELASTICSEARCH_URL: ""
+        ELASTICSEARCH_INDEX: ""
+
+      secret:
+        POSTGRES_USER: todo_user
+        POSTGRES_PASSWORD: todo_password
 
     frontend:
       enabled: true
