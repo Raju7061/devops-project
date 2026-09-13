@@ -1,7 +1,6 @@
 # =============================================================================
 # Todo CDC Platform
-# Frontend Values (Minikube)
-# Production Ready
+# Frontend Values - Minikube
 # =============================================================================
 
 replicaCount: 1
@@ -79,21 +78,23 @@ config:
   API_BASE_URL: "http://raju-stack-backend:8080/api"
   WS_BASE_URL: "ws://raju-stack-backend:8080/ws"
 
-  REACT_APP_ELASTICSEARCH_URL: "http://elasticsearch:9200"
-  REACT_APP_KIBANA_URL: "http://kibana:5601"h
+  # Disabled for now
+  REACT_APP_ELASTICSEARCH_URL: ""
+  REACT_APP_KIBANA_URL: ""
+
 # -----------------------------------------------------------------------------
-# Environment Variables (React)
+# React Environment Variables
 # -----------------------------------------------------------------------------
 env:
-  REACT_APP_API_URL: "http://raju-stack-backend:8080/api"
+  REACT_APP_API_URL: "http://todo.local/api"
   REACT_APP_APP_NAME: "Todo CDC Platform"
   REACT_APP_VERSION: "v26.100.1"
   REACT_APP_ENVIRONMENT: "minikube"
 
+secret: {}
+
 envFromConfigMap: true
 envFromSecret: false
-
-secret: {}
 
 # -----------------------------------------------------------------------------
 # Resources
@@ -108,7 +109,7 @@ resources:
     memory: 256Mi
 
 # -----------------------------------------------------------------------------
-# Health Probes
+# Startup Probe
 # -----------------------------------------------------------------------------
 startupProbe:
   enabled: true
@@ -118,6 +119,9 @@ startupProbe:
   failureThreshold: 30
   periodSeconds: 10
 
+# -----------------------------------------------------------------------------
+# Readiness Probe
+# -----------------------------------------------------------------------------
 readinessProbe:
   enabled: true
   httpGet:
@@ -128,6 +132,9 @@ readinessProbe:
   timeoutSeconds: 3
   failureThreshold: 3
 
+# -----------------------------------------------------------------------------
+# Liveness Probe
+# -----------------------------------------------------------------------------
 livenessProbe:
   enabled: true
   httpGet:
@@ -157,7 +164,7 @@ affinity: {}
 tolerations: []
 
 # -----------------------------------------------------------------------------
-# Security Context (NGINX runs as UID 101)
+# Security Context
 # -----------------------------------------------------------------------------
 securityContext:
   fsGroup: 101
@@ -172,7 +179,7 @@ containerSecurityContext:
 terminationGracePeriodSeconds: 30
 
 # -----------------------------------------------------------------------------
-# NGINX Settings
+# NGINX Configuration
 # -----------------------------------------------------------------------------
 nginx:
   workerProcesses: auto
