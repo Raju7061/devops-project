@@ -8,9 +8,6 @@ replicaCount: 1
 nameOverride: ""
 fullnameOverride: ""
 
-# -----------------------------------------------------------------------------
-# Docker Image
-# -----------------------------------------------------------------------------
 image:
   repository: 2024dock/cdc-frontend
   tag: "v1.0.0"
@@ -18,17 +15,11 @@ image:
 
 imagePullSecrets: []
 
-# -----------------------------------------------------------------------------
-# Service Account
-# -----------------------------------------------------------------------------
 serviceAccount:
   create: true
   annotations: {}
   name: ""
 
-# -----------------------------------------------------------------------------
-# Pod Metadata
-# -----------------------------------------------------------------------------
 podAnnotations: {}
 
 podLabels:
@@ -36,55 +27,35 @@ podLabels:
   component: ui
   environment: minikube
 
-# -----------------------------------------------------------------------------
-# Service
-# -----------------------------------------------------------------------------
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
 
-# -----------------------------------------------------------------------------
-# Ingress
-# -----------------------------------------------------------------------------
 ingress:
   enabled: true
   className: nginx
-
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-
   hosts:
     - host: todo.local
       paths:
         - path: /
           pathType: Prefix
-
   tls: []
 
-# -----------------------------------------------------------------------------
-# Frontend Configuration
-# -----------------------------------------------------------------------------
 config:
   NODE_ENV: production
-
   APP_NAME: "Todo CDC Platform"
   APP_VERSION: "v26.100.1"
-
   LOG_LEVEL: "info"
   ENABLE_ANALYTICS: "false"
-
   API_BASE_URL: "http://raju-stack-backend:8080/api"
   WS_BASE_URL: "ws://raju-stack-backend:8080/ws"
-
-  # Elasticsearch & Kibana disabled
   REACT_APP_ELASTICSEARCH_URL: ""
   REACT_APP_KIBANA_URL: ""
 
-# -----------------------------------------------------------------------------
-# React Environment Variables
-# -----------------------------------------------------------------------------
 env:
   REACT_APP_API_URL: "http://todo.local/api"
   REACT_APP_APP_NAME: "Todo CDC Platform"
@@ -96,21 +67,14 @@ secret: {}
 envFromConfigMap: true
 envFromSecret: false
 
-# -----------------------------------------------------------------------------
-# Resources
-# -----------------------------------------------------------------------------
 resources:
   requests:
     cpu: 50m
     memory: 64Mi
-
   limits:
     cpu: 300m
     memory: 256Mi
 
-# -----------------------------------------------------------------------------
-# Startup Probe
-# -----------------------------------------------------------------------------
 startupProbe:
   enabled: true
   httpGet:
@@ -119,9 +83,6 @@ startupProbe:
   failureThreshold: 30
   periodSeconds: 10
 
-# -----------------------------------------------------------------------------
-# Readiness Probe
-# -----------------------------------------------------------------------------
 readinessProbe:
   enabled: true
   httpGet:
@@ -132,9 +93,6 @@ readinessProbe:
   timeoutSeconds: 3
   failureThreshold: 3
 
-# -----------------------------------------------------------------------------
-# Liveness Probe
-# -----------------------------------------------------------------------------
 livenessProbe:
   enabled: true
   httpGet:
@@ -145,27 +103,18 @@ livenessProbe:
   timeoutSeconds: 3
   failureThreshold: 3
 
-# -----------------------------------------------------------------------------
-# Autoscaling
-# -----------------------------------------------------------------------------
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 70
 
-# -----------------------------------------------------------------------------
-# Scheduling
-# -----------------------------------------------------------------------------
 nodeSelector: {}
 
 affinity: {}
 
 tolerations: []
 
-# -----------------------------------------------------------------------------
-# Security Context
-# -----------------------------------------------------------------------------
 securityContext:
   fsGroup: 101
 
@@ -178,21 +127,12 @@ containerSecurityContext:
 
 terminationGracePeriodSeconds: 30
 
-# -----------------------------------------------------------------------------
-# NGINX Configuration
-# -----------------------------------------------------------------------------
 nginx:
   workerProcesses: auto
-
   gzip:
     enabled: true
-
   clientMaxBodySize: 10m
-
   keepaliveTimeout: 65
 
-# -----------------------------------------------------------------------------
-# Persistence
-# -----------------------------------------------------------------------------
 persistence:
   enabled: false
