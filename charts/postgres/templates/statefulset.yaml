@@ -40,7 +40,6 @@ spec:
 
       containers:
         - name: postgres
-
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
@@ -52,11 +51,13 @@ spec:
 
           ports:
             - name: postgres
-              containerPort: {{ .Values.service.targetPort }}
+              containerPort: 5432
               protocol: TCP
+
           envFrom:
             - configMapRef:
                 name: {{ include "postgres.fullname" . }}-config
+
           env:
             - name: POSTGRES_DB
               valueFrom:
@@ -107,7 +108,7 @@ spec:
               command:
                 - sh
                 - -c
-                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 5
@@ -117,7 +118,7 @@ spec:
               command:
                 - sh
                 - -c
-                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
