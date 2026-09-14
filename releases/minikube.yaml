@@ -14,7 +14,9 @@ metadata:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/part-of: todo-cdc-platform
     app.kubernetes.io/environment: minikube
-
+values:
+  global:
+    releaseTag: v26.100.11
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -24,11 +26,9 @@ metadata:
   labels:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/environment: minikube
-
 spec:
   interval: 2m
   releaseName: raju-stack
-
   chart:
     spec:
       chart: ./charts/raju-stack
@@ -38,36 +38,28 @@ spec:
         namespace: flux-system
       reconcileStrategy: Revision
       interval: 5m
-
   timeout: 10m
   maxHistory: 10
-
   install:
     createNamespace: true
     remediation:
       retries: 3
       remediateLastFailure: true
-
   upgrade:
     cleanupOnFail: true
     remediation:
       retries: 3
       remediateLastFailure: true
       strategy: rollback
-
   rollback:
     cleanupOnFail: true
     recreate: true
-
   uninstall:
     keepHistory: false
     deletionPropagation: background
-
   driftDetection:
     mode: enabled
-
   values:
-
     # =========================================================================
     # Global Values
     # =========================================================================
@@ -75,37 +67,30 @@ spec:
       releaseTag: "v26.100.5"
       environment: minikube
       namespace: raju
-
     # =========================================================================
     # Backend Service
     # =========================================================================
     backend:
       enabled: true
       replicaCount: 1
-
       image:
         repository: 2024dock/cdc-backend
         tag: "v1.0.6"
-
       service:
         type: ClusterIP
         port: 8080
-
     # =========================================================================
     # Frontend Service
     # =========================================================================
     frontend:
       enabled: true
       replicaCount: 1
-
       image:
         repository: 2024dock/cdc-frontend
         tag: "v1.0.6"
-
       service:
         type: ClusterIP
         port: 80
-
       ingress:
         enabled: true
         className: nginx
@@ -114,59 +99,49 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
-
     # =========================================================================
     # Kafka Consumer Service
     # =========================================================================
     consumer:
       enabled: true
       replicaCount: 1
-
       image:
         repository: 2024dock/cdc-consumer
         tag: "v1.0.3"
-
     # =========================================================================
     # PostgreSQL
     # =========================================================================
     postgres:
       enabled: true
       replicaCount: 1
-
       image:
         repository: postgres
         tag: "16.4"
-
       auth:
         database: tododb
         username: todo_user
         password: todo_password
-
       persistence:
         enabled: true
         storageClass: standard
         size: 5Gi
-
     # =========================================================================
     # Kafka
     # =========================================================================
     kafka:
       enabled: true
       replicaCount: 1
-
     # =========================================================================
     # Debezium
     # =========================================================================
     debezium:
       enabled: true
       replicaCount: 1
-
       connector:
         name: todo-postgres-connector
         database: tododb
         tableIncludeList: public.todos
         topicPrefix: todo
-
     # =========================================================================
     # Elasticsearch
     # Disable for now
@@ -174,11 +149,9 @@ spec:
     elasticsearch:
       enabled: false
       replicas: 1
-
       persistence:
         enabled: true
         size: 10Gi
-
     # =========================================================================
     # Kibana
     # Disable for now
@@ -186,10 +159,8 @@ spec:
     kibana:
       enabled: false
       replicas: 1
-
       service:
         port: 5601
-
     # =========================================================================
     # Monitoring
     # Disable for now
@@ -197,8 +168,10 @@ spec:
     monitoring:
       prometheus:
         enabled: false
-
       grafana:
         enabled: false
         adminUser: admin
         adminPassword: admin123
+values:
+  global:
+    releaseTag: v26.100.11
