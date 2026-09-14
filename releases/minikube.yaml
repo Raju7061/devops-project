@@ -72,7 +72,7 @@ spec:
     # Global Values
     # =========================================================================
     global:
-      releaseTag: "v26.100.4"
+      releaseTag: "v26.100.5"
       environment: minikube
       namespace: raju
 
@@ -85,7 +85,7 @@ spec:
 
       image:
         repository: 2024dock/cdc-backend
-        tag: "v1.0.4"
+        tag: "v1.0.6"
 
       service:
         type: ClusterIP
@@ -100,7 +100,7 @@ spec:
 
       image:
         repository: 2024dock/cdc-frontend
-        tag: "v1.0.5"
+        tag: "v1.0.6"
 
       service:
         type: ClusterIP
@@ -124,7 +124,7 @@ spec:
 
       image:
         repository: 2024dock/cdc-consumer
-        tag: "v1.0.2"
+        tag: "v1.0.3"
 
     # =========================================================================
     # PostgreSQL
