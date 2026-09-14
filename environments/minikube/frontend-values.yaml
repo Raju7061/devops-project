@@ -1,7 +1,6 @@
 # =============================================================================
 # Todo CDC Platform
-# Frontend Values (Minikube)
-# Production Ready
+# Frontend Values - Minikube
 # =============================================================================
 
 replicaCount: 1
@@ -9,9 +8,6 @@ replicaCount: 1
 nameOverride: ""
 fullnameOverride: ""
 
-# -----------------------------------------------------------------------------
-# Docker Image
-# -----------------------------------------------------------------------------
 image:
   repository: 2024dock/cdc-frontend
   tag: "v1.0.0"
@@ -19,17 +15,11 @@ image:
 
 imagePullSecrets: []
 
-# -----------------------------------------------------------------------------
-# Service Account
-# -----------------------------------------------------------------------------
 serviceAccount:
   create: true
   annotations: {}
   name: ""
 
-# -----------------------------------------------------------------------------
-# Pod Metadata
-# -----------------------------------------------------------------------------
 podAnnotations: {}
 
 podLabels:
@@ -37,79 +27,54 @@ podLabels:
   component: ui
   environment: minikube
 
-# -----------------------------------------------------------------------------
-# Service
-# -----------------------------------------------------------------------------
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
 
-# -----------------------------------------------------------------------------
-# Ingress
-# -----------------------------------------------------------------------------
 ingress:
   enabled: true
   className: nginx
-
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-
   hosts:
     - host: todo.local
       paths:
         - path: /
           pathType: Prefix
-
   tls: []
 
-# -----------------------------------------------------------------------------
-# Frontend Configuration
-# -----------------------------------------------------------------------------
 config:
   NODE_ENV: production
-
   APP_NAME: "Todo CDC Platform"
   APP_VERSION: "v26.100.1"
-
-  LOG_LEVEL: info
+  LOG_LEVEL: "info"
   ENABLE_ANALYTICS: "false"
-
   API_BASE_URL: "http://raju-stack-backend:8080/api"
   WS_BASE_URL: "ws://raju-stack-backend:8080/ws"
+  REACT_APP_ELASTICSEARCH_URL: ""
+  REACT_APP_KIBANA_URL: ""
 
-  REACT_APP_ELASTICSEARCH_URL: "http://elasticsearch:9200"
-  REACT_APP_KIBANA_URL: "http://kibana:5601"h
-# -----------------------------------------------------------------------------
-# Environment Variables (React)
-# -----------------------------------------------------------------------------
 env:
-  REACT_APP_API_URL: "http://raju-stack-backend:8080/api"
+  REACT_APP_API_URL: "http://todo.local/api"
   REACT_APP_APP_NAME: "Todo CDC Platform"
   REACT_APP_VERSION: "v26.100.1"
   REACT_APP_ENVIRONMENT: "minikube"
 
+secret: {}
+
 envFromConfigMap: true
 envFromSecret: false
 
-secret: {}
-
-# -----------------------------------------------------------------------------
-# Resources
-# -----------------------------------------------------------------------------
 resources:
   requests:
     cpu: 50m
     memory: 64Mi
-
   limits:
     cpu: 300m
     memory: 256Mi
 
-# -----------------------------------------------------------------------------
-# Health Probes
-# -----------------------------------------------------------------------------
 startupProbe:
   enabled: true
   httpGet:
@@ -138,27 +103,18 @@ livenessProbe:
   timeoutSeconds: 3
   failureThreshold: 3
 
-# -----------------------------------------------------------------------------
-# Autoscaling
-# -----------------------------------------------------------------------------
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 70
 
-# -----------------------------------------------------------------------------
-# Scheduling
-# -----------------------------------------------------------------------------
 nodeSelector: {}
 
 affinity: {}
 
 tolerations: []
 
-# -----------------------------------------------------------------------------
-# Security Context (NGINX runs as UID 101)
-# -----------------------------------------------------------------------------
 securityContext:
   fsGroup: 101
 
@@ -171,21 +127,12 @@ containerSecurityContext:
 
 terminationGracePeriodSeconds: 30
 
-# -----------------------------------------------------------------------------
-# NGINX Settings
-# -----------------------------------------------------------------------------
 nginx:
   workerProcesses: auto
-
   gzip:
     enabled: true
-
   clientMaxBodySize: 10m
-
   keepaliveTimeout: 65
 
-# -----------------------------------------------------------------------------
-# Persistence
-# -----------------------------------------------------------------------------
 persistence:
   enabled: false
