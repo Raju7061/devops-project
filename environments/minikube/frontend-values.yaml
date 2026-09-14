@@ -4,34 +4,26 @@
 # =============================================================================
 
 replicaCount: 1
-
 nameOverride: ""
 fullnameOverride: ""
-
 image:
   repository: 2024dock/cdc-frontend
-  tag: "v1.0.6"
+  tag: "v1.0.10"
   pullPolicy: IfNotPresent
-
 imagePullSecrets: []
-
 serviceAccount:
   create: true
   annotations: {}
   name: ""
-
 podAnnotations: {}
-
 podLabels:
   app: frontend
   component: ui
   environment: minikube
-
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
-
 ingress:
   enabled: true
   className: nginx
@@ -44,7 +36,6 @@ ingress:
         - path: /
           pathType: Prefix
   tls: []
-
 config:
   NODE_ENV: production
   APP_NAME: "Todo CDC Platform"
@@ -55,18 +46,14 @@ config:
   WS_BASE_URL: "ws://raju-stack-backend:8080/ws"
   REACT_APP_ELASTICSEARCH_URL: ""
   REACT_APP_KIBANA_URL: ""
-
 env:
   REACT_APP_API_URL: "http://todo.local/api"
   REACT_APP_APP_NAME: "Todo CDC Platform"
   REACT_APP_VERSION: "v26.100.1"
   REACT_APP_ENVIRONMENT: "minikube"
-
 secret: {}
-
 envFromConfigMap: true
 envFromSecret: false
-
 resources:
   requests:
     cpu: 50m
@@ -74,7 +61,6 @@ resources:
   limits:
     cpu: 300m
     memory: 256Mi
-
 startupProbe:
   enabled: true
   httpGet:
@@ -82,7 +68,6 @@ startupProbe:
     port: 80
   failureThreshold: 30
   periodSeconds: 10
-
 readinessProbe:
   enabled: true
   httpGet:
@@ -92,7 +77,6 @@ readinessProbe:
   periodSeconds: 5
   timeoutSeconds: 3
   failureThreshold: 3
-
 livenessProbe:
   enabled: true
   httpGet:
@@ -102,37 +86,28 @@ livenessProbe:
   periodSeconds: 10
   timeoutSeconds: 3
   failureThreshold: 3
-
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 70
-
 nodeSelector: {}
-
 affinity: {}
-
 tolerations: []
-
 securityContext:
   fsGroup: 101
-
 containerSecurityContext:
   runAsUser: 101
   runAsGroup: 101
   runAsNonRoot: true
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: false
-
 terminationGracePeriodSeconds: 30
-
 nginx:
   workerProcesses: auto
   gzip:
     enabled: true
   clientMaxBodySize: 10m
   keepaliveTimeout: 65
-
 persistence:
   enabled: false
