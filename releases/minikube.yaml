@@ -199,7 +199,13 @@ metadata:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/part-of: todo-cdc-platform
     app.kubernetes.io/environment: minikube
-
+values:
+  global:
+    releaseTag: v26.100.12
+spec:
+  values:
+    global:
+      releaseTag: v26.100.13
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -209,11 +215,9 @@ metadata:
   labels:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/environment: minikube
-
 spec:
   interval: 2m
   releaseName: raju-stack
-
   chart:
     spec:
       chart: ./charts/raju-stack
@@ -223,82 +227,69 @@ spec:
         namespace: flux-system
       reconcileStrategy: Revision
       interval: 5m
-
   timeout: 10m
   maxHistory: 10
-
   install:
     createNamespace: true
     remediation:
       retries: 3
       remediateLastFailure: true
-
   upgrade:
     cleanupOnFail: true
     remediation:
       retries: 3
       remediateLastFailure: true
       strategy: rollback
-
   rollback:
     cleanupOnFail: true
     recreate: true
-
   uninstall:
     keepHistory: false
     deletionPropagation: background
-
   driftDetection:
     mode: enabled
-
   values:
     global:
       releaseTag: "v26.100.13"
       environment: minikube
       namespace: raju
-
     backend:
       enabled: true
       replicaCount: 1
       image:
         repository: 2024dock/cdc-backend
         tag: "v1.0.11"
-
     frontend:
       enabled: true
       replicaCount: 1
       image:
         repository: 2024dock/cdc-frontend
         tag: "v1.0.11"
-
     consumer:
       enabled: true
       replicaCount: 1
       image:
         repository: 2024dock/cdc-consumer
         tag: "v1.0.3"
-
     postgres:
       enabled: true
       replicaCount: 1
       image:
         repository: postgres
         tag: "16.4"
-
     kafka:
       enabled: true
-
     debezium:
       enabled: true
-
     elasticsearch:
       enabled: false
-
     kibana:
       enabled: false
-
     monitoring:
       prometheus:
         enabled: false
       grafana:
         enabled: false
+values:
+  global:
+    releaseTag: v26.100.12
