@@ -202,6 +202,10 @@ metadata:
 values:
   global:
     releaseTag: v26.100.12
+spec:
+  values:
+    global:
+      releaseTag: v26.100.13
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
