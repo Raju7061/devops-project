@@ -253,7 +253,7 @@ spec:
 
   values:
     global:
-      releaseTag: "v26.100.11"
+      releaseTag: "v26.100.12"
       environment: minikube
       namespace: raju
 
@@ -262,14 +262,14 @@ spec:
       replicaCount: 1
       image:
         repository: 2024dock/cdc-backend
-        tag: "v1.0.6"
+        tag: "v1.0.11"
 
     frontend:
       enabled: true
       replicaCount: 1
       image:
         repository: 2024dock/cdc-frontend
-        tag: "v1.0.6"
+        tag: "v1.0.10"
 
     consumer:
       enabled: true
