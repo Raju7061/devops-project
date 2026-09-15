@@ -179,7 +179,7 @@
 replicaCount: 1
 image:
   repository: 2024dock/cdc-backend
-  tag: "v1.0.11"
+  tag: "v1.0.12"
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
