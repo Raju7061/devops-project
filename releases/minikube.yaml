@@ -199,13 +199,6 @@ metadata:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/part-of: todo-cdc-platform
     app.kubernetes.io/environment: minikube
-values:
-  global:
-    releaseTag: v26.100.12
-spec:
-  values:
-    global:
-      releaseTag: v26.100.13
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -290,6 +283,3 @@ spec:
         enabled: false
       grafana:
         enabled: false
-values:
-  global:
-    releaseTag: v26.100.12
