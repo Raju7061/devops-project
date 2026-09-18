@@ -46,53 +46,52 @@ spec:
 
           env:
             - name: BOOTSTRAP_SERVERS
-              value: {{ .Values.config.BOOTSTRAP_SERVERS | quote }}
+              value: {{ .Values.env.BOOTSTRAP_SERVERS | quote }}
 
             - name: GROUP_ID
-              value: {{ .Values.config.GROUP_ID | quote }}
+              value: {{ .Values.env.GROUP_ID | quote }}
 
             - name: CONFIG_STORAGE_TOPIC
-              value: {{ .Values.config.CONFIG_STORAGE_TOPIC | quote }}
+              value: {{ .Values.env.CONFIG_STORAGE_TOPIC | quote }}
 
             - name: OFFSET_STORAGE_TOPIC
-              value: {{ .Values.config.OFFSET_STORAGE_TOPIC | quote }}
+              value: {{ .Values.env.OFFSET_STORAGE_TOPIC | quote }}
 
             - name: STATUS_STORAGE_TOPIC
-              value: {{ .Values.config.STATUS_STORAGE_TOPIC | quote }}
+              value: {{ .Values.env.STATUS_STORAGE_TOPIC | quote }}
 
             - name: CONFIG_STORAGE_REPLICATION_FACTOR
-              value: {{ .Values.config.CONFIG_STORAGE_REPLICATION_FACTOR | quote }}
+              value: {{ .Values.env.CONFIG_STORAGE_REPLICATION_FACTOR | quote }}
 
             - name: OFFSET_STORAGE_REPLICATION_FACTOR
-              value: {{ .Values.config.OFFSET_STORAGE_REPLICATION_FACTOR | quote }}
+              value: {{ .Values.env.OFFSET_STORAGE_REPLICATION_FACTOR | quote }}
 
             - name: STATUS_STORAGE_REPLICATION_FACTOR
-              value: {{ .Values.config.STATUS_STORAGE_REPLICATION_FACTOR | quote }}
+              value: {{ .Values.env.STATUS_STORAGE_REPLICATION_FACTOR | quote }}
 
             - name: KEY_CONVERTER
-              value: {{ .Values.config.KEY_CONVERTER | quote }}
+              value: {{ .Values.env.KEY_CONVERTER | quote }}
 
             - name: VALUE_CONVERTER
-              value: {{ .Values.config.VALUE_CONVERTER | quote }}
+              value: {{ .Values.env.VALUE_CONVERTER | quote }}
 
             - name: KEY_CONVERTER_SCHEMAS_ENABLE
-              value: {{ .Values.config.KEY_CONVERTER_SCHEMAS_ENABLE | quote }}
+              value: {{ .Values.env.KEY_CONVERTER_SCHEMAS_ENABLE | quote }}
 
             - name: VALUE_CONVERTER_SCHEMAS_ENABLE
-              value: {{ .Values.config.VALUE_CONVERTER_SCHEMAS_ENABLE | quote }}
+              value: {{ .Values.env.VALUE_CONVERTER_SCHEMAS_ENABLE | quote }}
 
             - name: REST_ADVERTISED_HOST_NAME
-              value: {{ .Values.config.REST_ADVERTISED_HOST_NAME | quote }}
+              value: {{ .Values.env.REST_ADVERTISED_HOST_NAME | quote }}
 
             - name: REST_PORT
-              value: {{ .Values.config.REST_PORT | quote }}
+              value: {{ .Values.env.REST_PORT | quote }}
 
             - name: PLUGIN_PATH
-              value: {{ .Values.config.PLUGIN_PATH | quote }}
+              value: {{ .Values.env.PLUGIN_PATH | quote }}
 
             - name: LOG_LEVEL
-              value: {{ .Values.config.LOG_LEVEL | quote }}
-
+              value: {{ .Values.env.LOG_LEVEL | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
