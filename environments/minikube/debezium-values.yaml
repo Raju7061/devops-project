@@ -91,10 +91,10 @@ connector:
   config:
     connector.class: io.debezium.connector.postgresql.PostgresConnector
 
-    database.hostname: postgres
+    database.hostname: raju-stack-postgres
     database.port: "5432"
-    database.user: debezium
-    database.password: debezium_password
+    database.user: todo_user
+    database.password: todo_password
     database.dbname: tododb
 
     topic.prefix: todo

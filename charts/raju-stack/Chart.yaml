@@ -15,3 +15,9 @@ dependencies:
 - name: postgres
   repository: "file://../postgres"
   version: "0.1.0"
+- name: debezium
+  repository: "file://../debezium"
+  version: "0.1.0"
+- name: kafka
+  repository: "file://../kafka"
+  version: "0.1.0"
