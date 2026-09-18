@@ -18,117 +18,94 @@ spec:
       labels:
         {{- include "debezium.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
+{{ toYaml . | nindent 8 }}
         {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+{{ toYaml . | nindent 8 }}
+      {{- end }}
 
     spec:
       serviceAccountName: {{ include "debezium.serviceAccountName" . }}
+
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | nindent 8 }}
+      {{- end }}
 
       securityContext:
         fsGroup: {{ .Values.podSecurityContext.fsGroup }}
 
       containers:
         - name: debezium
-
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           securityContext:
             runAsUser: {{ .Values.securityContext.runAsUser }}
             runAsGroup: {{ .Values.securityContext.runAsGroup }}
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
+            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
 
           ports:
             - name: http
-              containerPort: 8083
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
 
-          env:
-            - name: BOOTSTRAP_SERVERS
-              value: {{ .Values.env.BOOTSTRAP_SERVERS | quote }}
+          # Kafka Connect environment variables
+          envFrom:
+            - configMapRef:
+                name: {{ include "debezium.fullname" . }}-config
 
-            - name: GROUP_ID
-              value: {{ .Values.env.GROUP_ID | quote }}
+            - secretRef:
+                name: {{ include "debezium.fullname" . }}-secret
 
-            - name: CONFIG_STORAGE_TOPIC
-              value: {{ .Values.env.CONFIG_STORAGE_TOPIC | quote }}
-
-            - name: OFFSET_STORAGE_TOPIC
-              value: {{ .Values.env.OFFSET_STORAGE_TOPIC | quote }}
-
-            - name: STATUS_STORAGE_TOPIC
-              value: {{ .Values.env.STATUS_STORAGE_TOPIC | quote }}
-
-            - name: CONFIG_STORAGE_REPLICATION_FACTOR
-              value: {{ .Values.env.CONFIG_STORAGE_REPLICATION_FACTOR | quote }}
-
-            - name: OFFSET_STORAGE_REPLICATION_FACTOR
-              value: {{ .Values.env.OFFSET_STORAGE_REPLICATION_FACTOR | quote }}
-
-            - name: STATUS_STORAGE_REPLICATION_FACTOR
-              value: {{ .Values.env.STATUS_STORAGE_REPLICATION_FACTOR | quote }}
-
-            - name: KEY_CONVERTER
-              value: {{ .Values.env.KEY_CONVERTER | quote }}
-
-            - name: VALUE_CONVERTER
-              value: {{ .Values.env.VALUE_CONVERTER | quote }}
-
-            - name: KEY_CONVERTER_SCHEMAS_ENABLE
-              value: {{ .Values.env.KEY_CONVERTER_SCHEMAS_ENABLE | quote }}
-
-            - name: VALUE_CONVERTER_SCHEMAS_ENABLE
-              value: {{ .Values.env.VALUE_CONVERTER_SCHEMAS_ENABLE | quote }}
-
-            - name: REST_ADVERTISED_HOST_NAME
-              value: {{ .Values.env.REST_ADVERTISED_HOST_NAME | quote }}
-
-            - name: REST_PORT
-              value: {{ .Values.env.REST_PORT | quote }}
-
-            - name: PLUGIN_PATH
-              value: {{ .Values.env.PLUGIN_PATH | quote }}
-
-            - name: LOG_LEVEL
-              value: {{ .Values.env.LOG_LEVEL | quote }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+{{ toYaml .Values.resources | nindent 12 }}
 
           startupProbe:
+            {{- if .Values.startupProbe.enabled }}
             httpGet:
-              path: /
-              port: http
-            periodSeconds: 10
-            failureThreshold: 30
+              path: {{ .Values.startupProbe.httpGet.path }}
+              port: {{ .Values.startupProbe.httpGet.port }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            {{- end }}
 
           readinessProbe:
+            {{- if .Values.readinessProbe.enabled }}
             httpGet:
-              path: /connectors
-              port: http
-            initialDelaySeconds: 20
-            periodSeconds: 10
-            timeoutSeconds: 5
+              path: {{ .Values.readinessProbe.httpGet.path }}
+              port: {{ .Values.readinessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            {{- end }}
 
           livenessProbe:
+            {{- if .Values.livenessProbe.enabled }}
             httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 5
+              path: {{ .Values.livenessProbe.httpGet.path }}
+              port: {{ .Values.livenessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+{{ toYaml . | nindent 8 }}
       {{- end }}
 
       {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+{{ toYaml . | nindent 8 }}
       {{- end }}
 
       {{- with .Values.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+{{ toYaml . | nindent 8 }}
       {{- end }}
