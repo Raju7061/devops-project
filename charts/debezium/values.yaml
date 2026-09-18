@@ -58,9 +58,9 @@ service:
   targetPort: 8083
 
 # -----------------------------------------------------------------------------
-# Kafka Connect Configuration
+# Kafka Connect Environment Variables
 # -----------------------------------------------------------------------------
-config:
+env:
   BOOTSTRAP_SERVERS: "raju-stack-kafka:9092"
 
   GROUP_ID: "todo-connect-cluster"
@@ -87,7 +87,7 @@ config:
   LOG_LEVEL: "INFO"
 
 # -----------------------------------------------------------------------------
-# PostgreSQL Connector (used by template)
+# PostgreSQL Source Connector
 # -----------------------------------------------------------------------------
 connector:
   enabled: true
@@ -136,7 +136,7 @@ connector:
     transforms.unwrap.delete.handling.mode: "rewrite"
 
 # -----------------------------------------------------------------------------
-# Automatically register connector after Debezium starts
+# Auto Register Connector
 # -----------------------------------------------------------------------------
 autoRegisterConnector:
   enabled: true
@@ -156,13 +156,13 @@ resources:
     memory: 1Gi
 
 # -----------------------------------------------------------------------------
-# Health Checks
+# Health Probes
 # -----------------------------------------------------------------------------
 startupProbe:
   enabled: true
   httpGet:
     path: /
-    port: http
+    port: 8083
   failureThreshold: 30
   periodSeconds: 10
 
@@ -170,7 +170,7 @@ readinessProbe:
   enabled: true
   httpGet:
     path: /connectors
-    port: http
+    port: 8083
   initialDelaySeconds: 20
   periodSeconds: 10
   timeoutSeconds: 5
@@ -180,7 +180,7 @@ livenessProbe:
   enabled: true
   httpGet:
     path: /
-    port: http
+    port: 8083
   initialDelaySeconds: 30
   periodSeconds: 15
   timeoutSeconds: 5
@@ -201,5 +201,10 @@ affinity: {}
 
 tolerations: []
 
+# -----------------------------------------------------------------------------
+# Autoscaling
+# -----------------------------------------------------------------------------
 autoscaling:
   enabled: false
+  minReplicas: 1
+  maxReplicas: 1
