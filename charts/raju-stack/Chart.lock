@@ -11,5 +11,11 @@ dependencies:
 - name: postgres
   repository: file://../postgres
   version: 0.1.0
-digest: sha256:55c6731269570e35656ac4c0b54198cce4c2a6c40a9ab16cfeadd92f90985453
-generated: "2026-09-12T01:58:00.163177+05:30"
+- name: debezium
+  repository: file://../debezium
+  version: 0.1.0
+- name: kafka
+  repository: file://../kafka
+  version: 0.1.0
+digest: sha256:1d625f4774186d14349ea603f3dcd325b36e28ff632aa49cff31f15617a704df
+generated: "2026-09-18T13:02:50.210342+05:30"
