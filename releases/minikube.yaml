@@ -1,3 +1,9 @@
+# =============================================================================
+# Todo CDC Platform - Minikube Release
+# FluxCD HelmRelease
+# Namespace: raju
+# Environment: Minikube
+# =============================================================================
 
 ---
 apiVersion: v1
@@ -8,6 +14,7 @@ metadata:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/part-of: todo-cdc-platform
     app.kubernetes.io/environment: minikube
+
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -17,9 +24,13 @@ metadata:
   labels:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/environment: minikube
+
 spec:
   interval: 2m
   releaseName: raju-stack
+  timeout: 10m
+  maxHistory: 10
+
   chart:
     spec:
       chart: ./charts/raju-stack
@@ -29,75 +40,161 @@ spec:
         namespace: flux-system
       reconcileStrategy: Revision
       interval: 5m
-  timeout: 10m
-  maxHistory: 10
+
   install:
     createNamespace: true
     remediation:
       retries: 3
       remediateLastFailure: true
+
   upgrade:
     cleanupOnFail: true
     remediation:
       retries: 3
       remediateLastFailure: true
       strategy: rollback
+
   rollback:
     cleanupOnFail: true
     recreate: true
+
   uninstall:
     keepHistory: false
     deletionPropagation: background
+
   driftDetection:
     mode: enabled
+
   values:
+    # =========================================================================
+    # Global
+    # =========================================================================
     global:
       releaseTag: "v26.100.13"
       environment: minikube
       namespace: raju
+
+    # =========================================================================
+    # Backend
+    # =========================================================================
     backend:
       enabled: true
       replicaCount: 1
+
       image:
         repository: 2024dock/cdc-backend
         tag: "v1.0.12"
+
+      service:
+        type: ClusterIP
+        port: 8080
+
+    # =========================================================================
+    # Frontend
+    # =========================================================================
     frontend:
       enabled: true
       replicaCount: 1
+
       image:
         repository: 2024dock/cdc-frontend
         tag: "v1.0.13"
+
+      service:
+        type: ClusterIP
+        port: 80
+
+      ingress:
+        enabled: true
+        className: nginx
+        hosts:
+          - host: todo.local
+            paths:
+              - path: /
+                pathType: Prefix
+
+    # =========================================================================
+    # Kafka Consumer
+    # =========================================================================
     consumer:
       enabled: true
       replicaCount: 1
+
       image:
         repository: 2024dock/cdc-consumer
         tag: "v1.0.3"
+
+    # =========================================================================
+    # PostgreSQL
+    # =========================================================================
     postgres:
       enabled: true
       replicaCount: 1
+
       image:
         repository: postgres
         tag: "16.4"
+
+      auth:
+        database: tododb
+        username: todo_user
+        password: todo_password
+
+      persistence:
+        enabled: true
+        storageClass: standard
+        size: 5Gi
+
+    # =========================================================================
+    # Kafka
+    # =========================================================================
     kafka:
       enabled: true
       replicaCount: 1
-      image:
-       repository: bitnami/kafka
-       tag: "3.8.0"
 
-  service:
-    type: ClusterIP
-    port: 9092
-    
+      image:
+        repository: bitnami/kafka
+        tag: "3.8.0"
+
+      service:
+        type: ClusterIP
+        port: 9092
+        targetPort: 9092
+
+    # =========================================================================
+    # Debezium
+    # =========================================================================
     debezium:
       enabled: true
+      replicaCount: 1
+
+      image:
+        repository: quay.io/debezium/connect
+        tag: "3.2"
+
+      service:
+        type: ClusterIP
+        port: 8083
+        targetPort: 8083
+
+    # =========================================================================
+    # Elasticsearch (Disabled)
+    # =========================================================================
     elasticsearch:
       enabled: false
+
+    # =========================================================================
+    # Kibana (Disabled)
+    # =========================================================================
     kibana:
       enabled: false
+
+    # =========================================================================
+    # Monitoring (Disabled)
+    # =========================================================================
     monitoring:
       prometheus:
         enabled: false
+
       grafana:
         enabled: false
