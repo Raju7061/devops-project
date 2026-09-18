@@ -1,77 +1,134 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: {{ include "debezium.fullname" . }}
   labels:
     {{- include "debezium.labels" . | nindent 4 }}
+
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
+
   selector:
     matchLabels:
       {{- include "debezium.selectorLabels" . | nindent 6 }}
+
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- include "debezium.labels" . | nindent 8 }}
+        {{- include "debezium.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       serviceAccountName: {{ include "debezium.serviceAccountName" . }}
-      {{- with .Values.podSecurityContext }}
+
       securityContext:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+
       containers:
-        - name: {{ .Chart.Name }}
-          {{- with .Values.securityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        - name: debezium
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          securityContext:
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+            runAsGroup: {{ .Values.securityContext.runAsGroup }}
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 8083
               protocol: TCP
-          {{- with .Values.livenessProbe }}
-          livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.readinessProbe }}
-          readinessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.resources }}
+
+          env:
+            - name: BOOTSTRAP_SERVERS
+              value: {{ .Values.config.BOOTSTRAP_SERVERS | quote }}
+
+            - name: GROUP_ID
+              value: {{ .Values.config.GROUP_ID | quote }}
+
+            - name: CONFIG_STORAGE_TOPIC
+              value: {{ .Values.config.CONFIG_STORAGE_TOPIC | quote }}
+
+            - name: OFFSET_STORAGE_TOPIC
+              value: {{ .Values.config.OFFSET_STORAGE_TOPIC | quote }}
+
+            - name: STATUS_STORAGE_TOPIC
+              value: {{ .Values.config.STATUS_STORAGE_TOPIC | quote }}
+
+            - name: CONFIG_STORAGE_REPLICATION_FACTOR
+              value: {{ .Values.config.CONFIG_STORAGE_REPLICATION_FACTOR | quote }}
+
+            - name: OFFSET_STORAGE_REPLICATION_FACTOR
+              value: {{ .Values.config.OFFSET_STORAGE_REPLICATION_FACTOR | quote }}
+
+            - name: STATUS_STORAGE_REPLICATION_FACTOR
+              value: {{ .Values.config.STATUS_STORAGE_REPLICATION_FACTOR | quote }}
+
+            - name: KEY_CONVERTER
+              value: {{ .Values.config.KEY_CONVERTER | quote }}
+
+            - name: VALUE_CONVERTER
+              value: {{ .Values.config.VALUE_CONVERTER | quote }}
+
+            - name: KEY_CONVERTER_SCHEMAS_ENABLE
+              value: {{ .Values.config.KEY_CONVERTER_SCHEMAS_ENABLE | quote }}
+
+            - name: VALUE_CONVERTER_SCHEMAS_ENABLE
+              value: {{ .Values.config.VALUE_CONVERTER_SCHEMAS_ENABLE | quote }}
+
+            - name: REST_ADVERTISED_HOST_NAME
+              value: {{ .Values.config.REST_ADVERTISED_HOST_NAME | quote }}
+
+            - name: REST_PORT
+              value: {{ .Values.config.REST_PORT | quote }}
+
+            - name: PLUGIN_PATH
+              value: {{ .Values.config.PLUGIN_PATH | quote }}
+
+            - name: LOG_LEVEL
+              value: {{ .Values.config.LOG_LEVEL | quote }}
+
           resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+
+          readinessProbe:
+            httpGet:
+              path: /connectors
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}

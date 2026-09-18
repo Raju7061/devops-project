@@ -1,0 +1,90 @@
+{{- if .Values.autoRegisterConnector.enabled }}
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: {{ include "debezium.fullname" . }}-connector
+  labels:
+    {{- include "debezium.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+
+spec:
+  backoffLimit: 5
+
+  template:
+    metadata:
+      labels:
+        {{- include "debezium.selectorLabels" . | nindent 8 }}
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: register-connector
+
+          image: curlimages/curl:8.10.1
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Debezium Connect..."
+
+              for i in $(seq 1 {{ .Values.autoRegisterConnector.retryCount }}); do
+                if curl -sf http://{{ include "debezium.fullname" . }}:8083/ > /dev/null; then
+                  echo "Debezium is ready."
+                  break
+                fi
+
+                echo "Retry $i/{{ .Values.autoRegisterConnector.retryCount }}"
+                sleep {{ .Values.autoRegisterConnector.retryIntervalSeconds }}
+              done
+
+              echo "Checking existing connector..."
+
+              if curl -sf http://{{ include "debezium.fullname" . }}:8083/connectors/{{ .Values.connector.name }} > /dev/null; then
+                echo "Connector already exists."
+                exit 0
+              fi
+
+              echo "Registering PostgreSQL connector..."
+
+              curl -X POST http://{{ include "debezium.fullname" . }}:8083/connectors \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "name":"{{ .Values.connector.name }}",
+                  "config":{
+                    "connector.class":"{{ index .Values.connector.config "connector.class" }}",
+                    "database.hostname":"{{ index .Values.connector.config "database.hostname" }}",
+                    "database.port":"{{ index .Values.connector.config "database.port" }}",
+                    "database.user":"{{ index .Values.connector.config "database.user" }}",
+                    "database.password":"{{ index .Values.connector.config "database.password" }}",
+                    "database.dbname":"{{ index .Values.connector.config "database.dbname" }}",
+                    "topic.prefix":"{{ index .Values.connector.config "topic.prefix" }}",
+                    "plugin.name":"{{ index .Values.connector.config "plugin.name" }}",
+                    "publication.name":"{{ index .Values.connector.config "publication.name" }}",
+                    "slot.name":"{{ index .Values.connector.config "slot.name" }}",
+                    "snapshot.mode":"{{ index .Values.connector.config "snapshot.mode" }}",
+                    "table.include.list":"{{ index .Values.connector.config "table.include.list" }}",
+                    "include.schema.changes":"{{ index .Values.connector.config "include.schema.changes" }}",
+                    "heartbeat.interval.ms":"{{ index .Values.connector.config "heartbeat.interval.ms" }}",
+                    "tombstones.on.delete":"{{ index .Values.connector.config "tombstones.on.delete" }}",
+                    "decimal.handling.mode":"{{ index .Values.connector.config "decimal.handling.mode" }}",
+                    "time.precision.mode":"{{ index .Values.connector.config "time.precision.mode" }}",
+                    "key.converter":"{{ index .Values.connector.config "key.converter" }}",
+                    "value.converter":"{{ index .Values.connector.config "value.converter" }}",
+                    "key.converter.schemas.enable":"{{ index .Values.connector.config "key.converter.schemas.enable" }}",
+                    "value.converter.schemas.enable":"{{ index .Values.connector.config "value.converter.schemas.enable" }}",
+                    "transforms":"{{ index .Values.connector.config "transforms" }}",
+                    "transforms.unwrap.type":"{{ index .Values.connector.config "transforms.unwrap.type" }}",
+                    "transforms.unwrap.drop.tombstones":"{{ index .Values.connector.config "transforms.unwrap.drop.tombstones" }}",
+                    "transforms.unwrap.delete.handling.mode":"{{ index .Values.connector.config "transforms.unwrap.delete.handling.mode" }}"
+                  }
+                }'
+
+              echo "Connector registration completed."
+{{- end }}

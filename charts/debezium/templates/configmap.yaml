@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ include "debezium.fullname" . }}-config
+
+data:
+  BOOTSTRAP_SERVERS: {{ .Values.config.BOOTSTRAP_SERVERS | quote }}
+  GROUP_ID: {{ .Values.config.GROUP_ID | quote }}
+  CONFIG_STORAGE_TOPIC: {{ .Values.config.CONFIG_STORAGE_TOPIC | quote }}
+  OFFSET_STORAGE_TOPIC: {{ .Values.config.OFFSET_STORAGE_TOPIC | quote }}
+  STATUS_STORAGE_TOPIC: {{ .Values.config.STATUS_STORAGE_TOPIC | quote }}
+  CONFIG_STORAGE_REPLICATION_FACTOR: {{ .Values.config.CONFIG_STORAGE_REPLICATION_FACTOR | quote }}
+  OFFSET_STORAGE_REPLICATION_FACTOR: {{ .Values.config.OFFSET_STORAGE_REPLICATION_FACTOR | quote }}
+  STATUS_STORAGE_REPLICATION_FACTOR: {{ .Values.config.STATUS_STORAGE_REPLICATION_FACTOR | quote }}
+  KEY_CONVERTER: {{ .Values.config.KEY_CONVERTER | quote }}
+  VALUE_CONVERTER: {{ .Values.config.VALUE_CONVERTER | quote }}
+  KEY_CONVERTER_SCHEMAS_ENABLE: {{ .Values.config.KEY_CONVERTER_SCHEMAS_ENABLE | quote }}
+  VALUE_CONVERTER_SCHEMAS_ENABLE: {{ .Values.config.VALUE_CONVERTER_SCHEMAS_ENABLE | quote }}
+  REST_ADVERTISED_HOST_NAME: {{ .Values.config.REST_ADVERTISED_HOST_NAME | quote }}
+  REST_PORT: {{ .Values.config.REST_PORT | quote }}
+  PLUGIN_PATH: {{ .Values.config.PLUGIN_PATH | quote }}
+  LOG_LEVEL: {{ .Values.config.LOG_LEVEL | quote }}

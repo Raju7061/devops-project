@@ -1,8 +1,7 @@
 # =============================================================================
-# Debezium Values - Minikube Environment
-# Project: Todo CDC Platform
-# Environment: Minikube
-# Debezium Connect 3.2 + PostgreSQL CDC + Kafka
+# Todo CDC Platform
+# Debezium Values (Minikube)
+# PostgreSQL CDC -> Kafka
 # =============================================================================
 
 replicaCount: 1
@@ -10,6 +9,9 @@ replicaCount: 1
 nameOverride: ""
 fullnameOverride: ""
 
+# -----------------------------------------------------------------------------
+# Docker Image
+# -----------------------------------------------------------------------------
 image:
   repository: quay.io/debezium/connect
   tag: "3.2"
@@ -17,11 +19,17 @@ image:
 
 imagePullSecrets: []
 
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
 serviceAccount:
   create: true
   annotations: {}
   name: ""
 
+# -----------------------------------------------------------------------------
+# Pod Metadata
+# -----------------------------------------------------------------------------
 podAnnotations: {}
 
 podLabels:
@@ -40,73 +48,60 @@ service:
 # -----------------------------------------------------------------------------
 # Kafka Connect Configuration
 # -----------------------------------------------------------------------------
-connect:
-  groupId: "todo-connect-cluster"
+config:
+  BOOTSTRAP_SERVERS: "raju-stack-kafka:9092"
 
-  configStorageTopic: "connect-configs"
-  offsetStorageTopic: "connect-offsets"
-  statusStorageTopic: "connect-status"
+  GROUP_ID: "todo-connect-cluster"
 
-  configStorageReplicationFactor: 1
-  offsetStorageReplicationFactor: 1
-  statusStorageReplicationFactor: 1
-
-# -----------------------------------------------------------------------------
-# Environment Variables
-# -----------------------------------------------------------------------------
-env:
-  BOOTSTRAP_SERVERS: kafka:9092
-
-  GROUP_ID: todo-connect-cluster
-
-  CONFIG_STORAGE_TOPIC: connect-configs
-  OFFSET_STORAGE_TOPIC: connect-offsets
-  STATUS_STORAGE_TOPIC: connect-status
+  CONFIG_STORAGE_TOPIC: "connect-configs"
+  OFFSET_STORAGE_TOPIC: "connect-offsets"
+  STATUS_STORAGE_TOPIC: "connect-status"
 
   CONFIG_STORAGE_REPLICATION_FACTOR: "1"
   OFFSET_STORAGE_REPLICATION_FACTOR: "1"
   STATUS_STORAGE_REPLICATION_FACTOR: "1"
 
-  KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-  VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+  KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+  VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
 
   KEY_CONVERTER_SCHEMAS_ENABLE: "false"
   VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
 
-  REST_ADVERTISED_HOST_NAME: debezium
+  REST_ADVERTISED_HOST_NAME: "raju-stack-debezium"
   REST_PORT: "8083"
 
-  PLUGIN_PATH: /kafka/connect,/debezium/connectors
+  PLUGIN_PATH: "/kafka/connect,/debezium/connectors"
 
-  LOG_LEVEL: INFO
+  LOG_LEVEL: "INFO"
 
 # -----------------------------------------------------------------------------
-# PostgreSQL Source Connector
+# PostgreSQL CDC Connector
 # -----------------------------------------------------------------------------
 connector:
   enabled: true
 
-  name: todo-postgres-connector
+  name: "todo-postgres-connector"
 
   config:
-    connector.class: io.debezium.connector.postgresql.PostgresConnector
+    connector.class: "io.debezium.connector.postgresql.PostgresConnector"
 
-    database.hostname: raju-stack-postgres
+    database.hostname: "raju-stack-postgres"
     database.port: "5432"
-    database.user: todo_user
-    database.password: todo_password
-    database.dbname: tododb
 
-    topic.prefix: todo
+    database.user: "todo_user"
+    database.password: "todo_password"
+    database.dbname: "tododb"
 
-    plugin.name: pgoutput
+    topic.prefix: "todo"
 
-    publication.name: todo_publication
-    slot.name: todo_debezium_slot
+    plugin.name: "pgoutput"
 
-    snapshot.mode: initial
+    publication.name: "todo_publication"
+    slot.name: "todo_debezium_slot"
 
-    table.include.list: public.todos
+    snapshot.mode: "initial"
+
+    table.include.list: "public.todos"
 
     include.schema.changes: "false"
 
@@ -114,30 +109,25 @@ connector:
 
     tombstones.on.delete: "false"
 
-    decimal.handling.mode: string
+    decimal.handling.mode: "string"
+    time.precision.mode: "connect"
 
-    time.precision.mode: connect
-
-    key.converter: org.apache.kafka.connect.json.JsonConverter
-    value.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter: "org.apache.kafka.connect.json.JsonConverter"
+    value.converter: "org.apache.kafka.connect.json.JsonConverter"
 
     key.converter.schemas.enable: "false"
     value.converter.schemas.enable: "false"
 
-    transforms: unwrap
-
-    transforms.unwrap.type: io.debezium.transforms.ExtractNewRecordState
-
+    transforms: "unwrap"
+    transforms.unwrap.type: "io.debezium.transforms.ExtractNewRecordState"
     transforms.unwrap.drop.tombstones: "true"
-
-    transforms.unwrap.delete.handling.mode: rewrite
+    transforms.unwrap.delete.handling.mode: "rewrite"
 
 # -----------------------------------------------------------------------------
-# Connector Auto Registration
+# Auto Register Connector
 # -----------------------------------------------------------------------------
 autoRegisterConnector:
   enabled: true
-
   retryCount: 30
   retryIntervalSeconds: 10
 
@@ -154,41 +144,35 @@ resources:
     memory: 1Gi
 
 # -----------------------------------------------------------------------------
-# Health Checks
+# Health Probes
 # -----------------------------------------------------------------------------
-livenessProbe:
+startupProbe:
   enabled: true
-
   httpGet:
     path: /
     port: 8083
-
-  initialDelaySeconds: 30
-  periodSeconds: 15
-  timeoutSeconds: 5
-  failureThreshold: 5
+  failureThreshold: 30
+  periodSeconds: 10
 
 readinessProbe:
   enabled: true
-
   httpGet:
     path: /connectors
     port: 8083
-
   initialDelaySeconds: 20
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 5
 
-startupProbe:
+livenessProbe:
   enabled: true
-
   httpGet:
     path: /
     port: 8083
-
-  periodSeconds: 10
-  failureThreshold: 30
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 5
 
 # -----------------------------------------------------------------------------
 # Persistence
@@ -199,36 +183,30 @@ persistence:
 # -----------------------------------------------------------------------------
 # Security Context
 # -----------------------------------------------------------------------------
+podSecurityContext:
+  fsGroup: 1001
+
 securityContext:
   runAsUser: 1001
   runAsGroup: 1001
-  fsGroup: 1001
-
-containerSecurityContext:
+  runAsNonRoot: true
   allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
 
 # -----------------------------------------------------------------------------
 # Scheduling
 # -----------------------------------------------------------------------------
 nodeSelector: {}
 
-tolerations: []
-
 affinity: {}
 
+tolerations: []
+
 # -----------------------------------------------------------------------------
-# Metrics (Prometheus JMX Exporter)
+# Metrics
 # -----------------------------------------------------------------------------
 metrics:
   enabled: true
-
-  image:
-    repository: bitnami/jmx-exporter
-    tag: "0.20.0"
-
-  serviceMonitor:
-    enabled: true
-    interval: 30s
 
 # -----------------------------------------------------------------------------
 # Logging
@@ -236,7 +214,5 @@ metrics:
 logging:
   level: INFO
 
-  loggers:
-    io.debezium: INFO
-    org.apache.kafka.connect.runtime: INFO
-    org.apache.kafka.clients: WARN
+autoscaling:
+  enabled: false

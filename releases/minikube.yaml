@@ -81,6 +81,15 @@ spec:
         tag: "16.4"
     kafka:
       enabled: true
+      replicaCount: 1
+      image:
+       repository: bitnami/kafka
+       tag: "3.8.0"
+
+  service:
+    type: ClusterIP
+    port: 9092
+    
     debezium:
       enabled: true
     elasticsearch:
