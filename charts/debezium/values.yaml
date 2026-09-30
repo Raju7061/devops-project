@@ -58,9 +58,9 @@ service:
   targetPort: 8083
 
 # -----------------------------------------------------------------------------
-# Kafka Connect Environment Variables
+# Kafka Connect Configuration
 # -----------------------------------------------------------------------------
-env:
+config:
   BOOTSTRAP_SERVERS: "raju-stack-kafka:9092"
 
   GROUP_ID: "todo-connect-cluster"
@@ -87,7 +87,7 @@ env:
   LOG_LEVEL: "INFO"
 
 # -----------------------------------------------------------------------------
-# PostgreSQL Source Connector
+# PostgreSQL CDC Connector
 # -----------------------------------------------------------------------------
 connector:
   enabled: true
@@ -121,7 +121,6 @@ connector:
     tombstones.on.delete: "false"
 
     decimal.handling.mode: "string"
-
     time.precision.mode: "connect"
 
     key.converter: "org.apache.kafka.connect.json.JsonConverter"
@@ -162,7 +161,7 @@ startupProbe:
   enabled: true
   httpGet:
     path: /
-    port: 8083
+    port: http
   failureThreshold: 30
   periodSeconds: 10
 
@@ -170,7 +169,7 @@ readinessProbe:
   enabled: true
   httpGet:
     path: /connectors
-    port: 8083
+    port: http
   initialDelaySeconds: 20
   periodSeconds: 10
   timeoutSeconds: 5
@@ -180,7 +179,7 @@ livenessProbe:
   enabled: true
   httpGet:
     path: /
-    port: 8083
+    port: http
   initialDelaySeconds: 30
   periodSeconds: 15
   timeoutSeconds: 5

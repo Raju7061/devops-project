@@ -1,17 +1,11 @@
 # =============================================================================
 # Todo CDC Platform
-# Debezium Values (Minikube)
+# Debezium Values - Minikube
 # PostgreSQL CDC -> Kafka
 # =============================================================================
 
 replicaCount: 1
 
-nameOverride: ""
-fullnameOverride: ""
-
-# -----------------------------------------------------------------------------
-# Docker Image
-# -----------------------------------------------------------------------------
 image:
   repository: quay.io/debezium/connect
   tag: "3.2"
@@ -19,17 +13,12 @@ image:
 
 imagePullSecrets: []
 
-# -----------------------------------------------------------------------------
-# Service Account
-# -----------------------------------------------------------------------------
 serviceAccount:
   create: true
+  automount: true
   annotations: {}
   name: ""
 
-# -----------------------------------------------------------------------------
-# Pod Metadata
-# -----------------------------------------------------------------------------
 podAnnotations: {}
 
 podLabels:
@@ -37,17 +26,11 @@ podLabels:
   component: kafka-connect
   environment: minikube
 
-# -----------------------------------------------------------------------------
-# Service
-# -----------------------------------------------------------------------------
 service:
   type: ClusterIP
   port: 8083
   targetPort: 8083
 
-# -----------------------------------------------------------------------------
-# Kafka Connect Configuration
-# -----------------------------------------------------------------------------
 config:
   BOOTSTRAP_SERVERS: "raju-stack-kafka:9092"
 
@@ -74,9 +57,6 @@ config:
 
   LOG_LEVEL: "INFO"
 
-# -----------------------------------------------------------------------------
-# PostgreSQL CDC Connector
-# -----------------------------------------------------------------------------
 connector:
   enabled: true
 
@@ -123,17 +103,11 @@ connector:
     transforms.unwrap.drop.tombstones: "true"
     transforms.unwrap.delete.handling.mode: "rewrite"
 
-# -----------------------------------------------------------------------------
-# Auto Register Connector
-# -----------------------------------------------------------------------------
 autoRegisterConnector:
   enabled: true
   retryCount: 30
   retryIntervalSeconds: 10
 
-# -----------------------------------------------------------------------------
-# Resources
-# -----------------------------------------------------------------------------
 resources:
   requests:
     cpu: 250m
@@ -143,22 +117,23 @@ resources:
     cpu: "1"
     memory: 1Gi
 
-# -----------------------------------------------------------------------------
-# Health Probes
-# -----------------------------------------------------------------------------
 startupProbe:
   enabled: true
+
   httpGet:
     path: /
-    port: 8083
+    port: http
+
   failureThreshold: 30
   periodSeconds: 10
 
 readinessProbe:
   enabled: true
+
   httpGet:
     path: /connectors
-    port: 8083
+    port: http
+
   initialDelaySeconds: 20
   periodSeconds: 10
   timeoutSeconds: 5
@@ -166,23 +141,22 @@ readinessProbe:
 
 livenessProbe:
   enabled: true
+
   httpGet:
     path: /
-    port: 8083
+    port: http
+
   initialDelaySeconds: 30
   periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 5
 
-# -----------------------------------------------------------------------------
-# Persistence
-# -----------------------------------------------------------------------------
+metrics:
+  enabled: true
+
 persistence:
   enabled: false
 
-# -----------------------------------------------------------------------------
-# Security Context
-# -----------------------------------------------------------------------------
 podSecurityContext:
   fsGroup: 1001
 
@@ -193,26 +167,16 @@ securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: false
 
-# -----------------------------------------------------------------------------
-# Scheduling
-# -----------------------------------------------------------------------------
 nodeSelector: {}
 
 affinity: {}
 
 tolerations: []
 
-# -----------------------------------------------------------------------------
-# Metrics
-# -----------------------------------------------------------------------------
-metrics:
-  enabled: true
-
-# -----------------------------------------------------------------------------
-# Logging
-# -----------------------------------------------------------------------------
 logging:
   level: INFO
 
 autoscaling:
   enabled: false
+  minReplicas: 1
+  maxReplicas: 1
