@@ -1,2 +1,11 @@
 global:
   releaseTag: v26.100.13
+
+elasticsearch:
+  enabled: false
+
+kibana:
+  enabled: false
+
+kowl:
+  enabled: false

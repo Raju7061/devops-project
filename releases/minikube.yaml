@@ -253,16 +253,96 @@ spec:
         retryIntervalSeconds: 10
 
     # =========================================================================
-    # Elasticsearch (Disabled)
+    # Elasticsearch
     # =========================================================================
     elasticsearch:
-      enabled: false
+      enabled: true
+      replicaCount: 1
+
+      image:
+        repository: docker.elastic.co/elasticsearch/elasticsearch
+        tag: "8.15.3"
+        pullPolicy: IfNotPresent
+
+      service:
+        type: ClusterIP
+        port: 9200
+
+      env:
+        discovery.type: single-node
+        network.host: 0.0.0.0
+        node.store.allow_mmap: "false"
+        xpack.security.enabled: "false"
+        ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1Gi
+        limits:
+          cpu: "1"
+          memory: 2Gi
 
     # =========================================================================
-    # Kibana (Disabled)
+    # Kibana
     # =========================================================================
     kibana:
-      enabled: false
+      enabled: true
+      replicaCount: 1
+
+      image:
+        repository: docker.elastic.co/kibana/kibana
+        tag: "8.15.3"
+        pullPolicy: IfNotPresent
+
+      service:
+        type: ClusterIP
+        port: 5601
+
+      env:
+        SERVER_HOST: "0.0.0.0"
+        ELASTICSEARCH_HOSTS: '["http://raju-stack-elasticsearch:9200"]'
+        NODE_OPTIONS: "--max-old-space-size=512"
+
+      readinessProbe:
+        httpGet:
+          path: /api/status
+          port: http
+      livenessProbe:
+        httpGet:
+          path: /api/status
+          port: http
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+
+    # =========================================================================
+    # Kowl-compatible Kafka UI (Redpanda Console)
+    # =========================================================================
+    kowl:
+      enabled: true
+      replicaCount: 1
+      image:
+        repository: docker.redpanda.com/redpandadata/console
+        tag: "v2.8.8"
+        pullPolicy: IfNotPresent
+      service:
+        type: ClusterIP
+        port: 8080
+      env:
+        KAFKA_BROKERS: "raju-stack-kafka:9092"
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
 
     # =========================================================================
     # Monitoring (Disabled)

@@ -17,5 +17,14 @@ dependencies:
 - name: kafka
   repository: file://../kafka
   version: 0.1.0
-digest: sha256:1d625f4774186d14349ea603f3dcd325b36e28ff632aa49cff31f15617a704df
-generated: "2026-09-18T13:02:50.210342+05:30"
+- name: elasticsearch
+  repository: file://../elasticsearch
+  version: 0.1.0
+- name: kibana
+  repository: file://../kibana
+  version: 0.1.0
+- name: kowl
+  repository: file://../kowl
+  version: 0.1.0
+digest: sha256:3715b4004f091332e8e77486bf23b0e57cd4e3c7aa15515074acd6d1ce505a7b
+generated: "2026-10-01T03:53:36.459669+05:30"

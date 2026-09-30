@@ -21,3 +21,15 @@ dependencies:
 - name: kafka
   repository: "file://../kafka"
   version: "0.1.0"
+- name: elasticsearch
+  repository: "file://../elasticsearch"
+  version: "0.1.0"
+  condition: elasticsearch.enabled
+- name: kibana
+  repository: "file://../kibana"
+  version: "0.1.0"
+  condition: kibana.enabled
+- name: kowl
+  repository: "file://../kowl"
+  version: "0.1.0"
+  condition: kowl.enabled
