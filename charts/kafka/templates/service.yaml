@@ -8,9 +8,13 @@ metadata:
 
 spec:
   type: {{ .Values.service.type }}
+  publishNotReadyAddresses: {{ .Values.service.publishNotReadyAddresses }}
 
   selector:
     {{- include "kafka.selectorLabels" . | nindent 4 }}
+    {{- with .Values.podLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 
   ports:
     - name: kafka
