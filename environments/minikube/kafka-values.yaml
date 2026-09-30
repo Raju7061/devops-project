@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: bitnami/kafka
+  repository: bitnamilegacy/kafka
   tag: "3.8.0"
   pullPolicy: IfNotPresent
 
