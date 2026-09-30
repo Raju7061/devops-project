@@ -304,14 +304,27 @@ spec:
         ELASTICSEARCH_HOSTS: '["http://raju-stack-elasticsearch:9200"]'
         NODE_OPTIONS: "--max-old-space-size=512"
 
+      startupProbe:
+        httpGet:
+          path: /api/status
+          port: http
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 60
       readinessProbe:
         httpGet:
           path: /api/status
           port: http
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 12
       livenessProbe:
         httpGet:
           path: /api/status
           port: http
+        periodSeconds: 20
+        timeoutSeconds: 5
+        failureThreshold: 6
 
       resources:
         requests:
