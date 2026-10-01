@@ -5,6 +5,7 @@ metadata:
   name: {{ include "kafka.fullname" . }}-config
 
 data:
+  KAFKA_HEAP_OPTS: {{ .Values.config.KAFKA_HEAP_OPTS | quote }}
   KAFKA_CFG_NODE_ID: {{ .Values.config.KAFKA_CFG_NODE_ID | quote }}
   KAFKA_CFG_PROCESS_ROLES: {{ .Values.config.KAFKA_CFG_PROCESS_ROLES | quote }}
   KAFKA_CFG_CONTROLLER_LISTENER_NAMES: {{ .Values.config.KAFKA_CFG_CONTROLLER_LISTENER_NAMES | quote }}

@@ -9,6 +9,12 @@ service:
   type: ClusterIP
   port: 8080
 
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+
 env:
   KAFKA_BROKERS: "raju-stack-kafka:9092"
 
