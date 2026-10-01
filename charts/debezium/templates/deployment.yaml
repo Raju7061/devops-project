@@ -37,6 +37,44 @@ spec:
       securityContext:
         fsGroup: {{ .Values.podSecurityContext.fsGroup }}
 
+      initContainers:
+        - name: configure-connect-topics
+          image: "{{ .Values.kafkaAdmin.image.repository }}:{{ .Values.kafkaAdmin.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms64m -Xmx256m"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.kafkaAdmin.bootstrapServers | quote }}
+            - name: CONFIG_STORAGE_TOPIC
+              value: {{ .Values.config.CONFIG_STORAGE_TOPIC | quote }}
+            - name: OFFSET_STORAGE_TOPIC
+              value: {{ .Values.config.OFFSET_STORAGE_TOPIC | quote }}
+            - name: STATUS_STORAGE_TOPIC
+              value: {{ .Values.config.STATUS_STORAGE_TOPIC | quote }}
+          command:
+            - /bin/bash
+            - -ec
+          args:
+            - |
+              kafka_topics=/opt/bitnami/kafka/bin/kafka-topics.sh
+              kafka_configs=/opt/bitnami/kafka/bin/kafka-configs.sh
+
+              until "$kafka_topics" --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" --list >/dev/null 2>&1; do
+                echo "Waiting for Kafka at $KAFKA_BOOTSTRAP_SERVERS"
+                sleep 5
+              done
+
+              for topic in "$CONFIG_STORAGE_TOPIC" "$OFFSET_STORAGE_TOPIC" "$STATUS_STORAGE_TOPIC"; do
+                "$kafka_topics" --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" \
+                  --create --if-not-exists --topic "$topic" \
+                  --partitions 1 --replication-factor 1 \
+                  --config cleanup.policy=compact
+                "$kafka_configs" --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" \
+                  --entity-type topics --entity-name "$topic" \
+                  --alter --add-config cleanup.policy=compact
+              done
+
       containers:
         - name: debezium
 

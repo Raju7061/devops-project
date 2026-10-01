@@ -57,6 +57,12 @@ service:
   port: 8083
   targetPort: 8083
 
+kafkaAdmin:
+  image:
+    repository: bitnamilegacy/kafka
+    tag: "3.8.0"
+  bootstrapServers: "raju-stack-kafka:9092"
+
 # -----------------------------------------------------------------------------
 # Kafka Connect Configuration
 # -----------------------------------------------------------------------------
