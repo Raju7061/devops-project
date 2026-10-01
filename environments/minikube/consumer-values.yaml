@@ -39,7 +39,7 @@ config:
   LOG_LEVEL: info
 
   # Kafka
-  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KAFKA_BOOTSTRAP_SERVERS: raju-stack-kafka:9092
   KAFKA_GROUP_ID: todo-consumer-group
   KAFKA_CLIENT_ID: todo-consumer
   KAFKA_TOPIC: todo.public.todos
@@ -48,7 +48,7 @@ config:
   DEBEZIUM_CONNECT_NAME: todo-postgres-connector
 
   # Elasticsearch
-  ELASTICSEARCH_URL: http://elasticsearch:9200
+  ELASTICSEARCH_URL: http://raju-stack-elasticsearch:9200
   ELASTICSEARCH_INDEX: todos
 
   # Retry behaviour
