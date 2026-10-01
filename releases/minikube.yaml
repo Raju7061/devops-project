@@ -163,6 +163,9 @@ spec:
         repository: bitnamilegacy/kafka
         tag: "3.8.0"
 
+      config:
+        KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
+
       service:
         type: ClusterIP
         port: 9092
@@ -306,6 +309,15 @@ spec:
         type: ClusterIP
         port: 5601
 
+      ingress:
+        enabled: true
+        className: nginx
+        hosts:
+          - host: todo.kibana
+            paths:
+              - path: /
+                pathType: Prefix
+
       env:
         SERVER_HOST: "0.0.0.0"
         ELASTICSEARCH_HOSTS: '["http://raju-stack-elasticsearch:9200"]'
@@ -354,6 +366,14 @@ spec:
       service:
         type: ClusterIP
         port: 8080
+      ingress:
+        enabled: true
+        className: nginx
+        hosts:
+          - host: todo.kowl
+            paths:
+              - path: /
+                pathType: Prefix
       env:
         KAFKA_BROKERS: "raju-stack-kafka:9092"
       resources:
