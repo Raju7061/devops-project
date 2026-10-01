@@ -70,7 +70,7 @@ spec:
     # Global
     # =========================================================================
     global:
-      releaseTag: "v26.100.13"
+      releaseTag: "v26.100.14"
       environment: minikube
       namespace: raju
 
