@@ -262,6 +262,14 @@ spec:
         retryCount: 30
         retryIntervalSeconds: 10
 
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: "2"
+          memory: 3Gi
+
     # =========================================================================
     # Elasticsearch
     # =========================================================================
