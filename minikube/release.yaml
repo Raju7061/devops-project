@@ -1,0 +1,101 @@
+# =============================================================================
+# Todo CDC Platform - Minikube Release
+# FluxCD HelmRelease
+# Namespace: raju
+# Environment: Minikube
+# =============================================================================
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: raju
+  labels:
+    app.kubernetes.io/name: raju-stack
+    app.kubernetes.io/part-of: todo-cdc-platform
+    app.kubernetes.io/environment: minikube
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: raju-stack
+  namespace: raju
+  labels:
+    app.kubernetes.io/name: raju-stack
+    app.kubernetes.io/environment: minikube
+
+spec:
+  interval: 2m
+  releaseName: raju-stack
+  timeout: 10m
+  maxHistory: 10
+
+  chart:
+    spec:
+      chart: ./charts/raju-stack
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      reconcileStrategy: Revision
+      interval: 5m
+
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      strategy: rollback
+
+  rollback:
+    cleanupOnFail: true
+    recreate: true
+
+  uninstall:
+    keepHistory: false
+    deletionPropagation: background
+
+  driftDetection:
+    mode: enabled
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: minikube-global-values
+      valuesKey: global-values.yaml
+    - kind: ConfigMap
+      name: minikube-backend-values
+      valuesKey: backend-values.yaml
+    - kind: ConfigMap
+      name: minikube-frontend-values
+      valuesKey: frontend-values.yaml
+    - kind: ConfigMap
+      name: minikube-consumer-values
+      valuesKey: consumer-values.yaml
+    - kind: ConfigMap
+      name: minikube-postgres-values
+      valuesKey: postgres-values.yaml
+    - kind: ConfigMap
+      name: minikube-kafka-values
+      valuesKey: kafka-values.yaml
+    - kind: ConfigMap
+      name: minikube-debezium-values
+      valuesKey: debezium-values.yaml
+    - kind: ConfigMap
+      name: minikube-elasticsearch-values
+      valuesKey: elasticsearch-values.yaml
+    - kind: ConfigMap
+      name: minikube-kibana-values
+      valuesKey: kibana-values.yaml
+    - kind: ConfigMap
+      name: minikube-kowl-values
+      valuesKey: kowl-values.yaml
+    - kind: ConfigMap
+      name: minikube-monitoring-values
+      valuesKey: monitoring-values.yaml

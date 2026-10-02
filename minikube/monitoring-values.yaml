@@ -1,0 +1,5 @@
+monitoring:
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false

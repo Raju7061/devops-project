@@ -1,0 +1,12 @@
+consumer:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 2024dock/cdc-consumer
+    tag: "v1.0.3"
+  config:
+    KAFKA_BOOTSTRAP_SERVERS: "raju-stack-kafka:9092"
+    KAFKA_TOPIC: "todo.public.todos"
+    ELASTICSEARCH_URL: "http://raju-stack-elasticsearch:9200"
+    ELASTICSEARCH_INDEX: "todos"
+    GROUP_ID: "todo-consumer-group"
