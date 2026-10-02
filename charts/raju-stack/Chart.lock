@@ -1,4 +1,7 @@
 dependencies:
+- name: auth-service
+  repository: file://../auth-service
+  version: 0.1.0
 - name: backend
   repository: file://../backend
   version: 0.1.0
@@ -26,5 +29,5 @@ dependencies:
 - name: kowl
   repository: file://../kowl
   version: 0.1.0
-digest: sha256:3715b4004f091332e8e77486bf23b0e57cd4e3c7aa15515074acd6d1ce505a7b
-generated: "2026-10-01T03:53:36.459669+05:30"
+digest: sha256:16d8c01fe06b13d23b7a09a0a9c9507cd068c2dab89f42643bacf385f88eb00c
+generated: "2026-10-02T23:57:45.883715+05:30"

@@ -1,0 +1,23 @@
+auth-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 2024dock/cdc-auth
+    tag: "v1.0.0"
+    pullPolicy: IfNotPresent
+  config:
+    POSTGRES_HOST: raju-stack-postgres
+    POSTGRES_PORT: "5432"
+    POSTGRES_DB: tododb
+    POSTGRES_USER: todo_user
+  secret:
+    POSTGRES_PASSWORD: todo_password
+    # Local Minikube only. Use a managed Kubernetes Secret for shared environments.
+    JWT_SECRET: "minikube-development-only-change-before-sharing-0001"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
