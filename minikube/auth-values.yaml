@@ -3,7 +3,7 @@ auth-service:
   replicaCount: 1
   image:
     repository: 2024dock/cdc-auth
-    tag: "v1.0.0"
+    tag: "v1.0.1"
     pullPolicy: IfNotPresent
   config:
     POSTGRES_HOST: raju-stack-postgres
