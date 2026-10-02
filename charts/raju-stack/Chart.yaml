@@ -1,7 +1,7 @@
 apiVersion: v2
 name: raju-stack
-version: 26.100.1
-appVersion: v26.100.1
+version: 26.100.15
+appVersion: v26.100.15
 dependencies:
 - name: backend
   repository: file://../backend
