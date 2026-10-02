@@ -40,9 +40,8 @@ service:
 # -----------------------------------------------------------------------------
 # Admin Credentials
 # -----------------------------------------------------------------------------
-admin:
-  user: admin
-  password: admin123
+adminUser: admin
+adminPassword: admin123
 
 # -----------------------------------------------------------------------------
 # Grafana Configuration
@@ -55,7 +54,6 @@ grafana.ini:
 
   security:
     admin_user: admin
-    admin_password: admin123
     allow_embedding: true
 
   users:
@@ -117,8 +115,6 @@ resources:
 # Health Checks
 # -----------------------------------------------------------------------------
 livenessProbe:
-  enabled: true
-
   httpGet:
     path: /api/health
     port: 3000
@@ -128,8 +124,6 @@ livenessProbe:
   timeoutSeconds: 5
 
 readinessProbe:
-  enabled: true
-
   httpGet:
     path: /api/health
     port: 3000
@@ -137,16 +131,6 @@ readinessProbe:
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
-
-startupProbe:
-  enabled: true
-
-  httpGet:
-    path: /api/health
-    port: 3000
-
-  failureThreshold: 30
-  periodSeconds: 10
 
 # -----------------------------------------------------------------------------
 # Security Context
@@ -200,7 +184,7 @@ datasources:
         type: prometheus
         uid: prometheus
         access: proxy
-        url: http://prometheus-server:9090
+        url: http://prometheus-prometheus.monitoring.svc:9090
         isDefault: true
         editable: true
 
@@ -304,15 +288,6 @@ smtp:
 # -----------------------------------------------------------------------------
 # Alerting
 # -----------------------------------------------------------------------------
-alerting:
-  enabled: true
-
-  contactPoints:
-    - name: default-email
-      type: email
-      settings:
-        addresses: devops@example.com
-
 # -----------------------------------------------------------------------------
 # Logging
 # -----------------------------------------------------------------------------
