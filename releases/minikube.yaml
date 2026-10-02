@@ -205,7 +205,7 @@ values:
 spec:
   values:
     global:
-      releaseTag: v26.100.13
+      releaseTag: v26.100.14
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -250,7 +250,7 @@ spec:
     mode: enabled
   values:
     global:
-      releaseTag: "v26.100.13"
+      releaseTag: "v26.100.14"
       environment: minikube
       namespace: raju
     backend:
