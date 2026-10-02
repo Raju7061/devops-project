@@ -1,7 +1,7 @@
 apiVersion: v2
 name: raju-stack
-version: 26.100.16
-appVersion: v26.100.16
+version: 26.100.20
+appVersion: v26.100.20
 dependencies:
 - name: auth-service
   repository: file://../auth-service
