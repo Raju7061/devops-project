@@ -12,6 +12,9 @@ configMapGenerator:
   - name: minikube-global-values
     files:
       - global-values.yaml
+  - name: minikube-auth-values
+    files:
+      - auth-values.yaml
   - name: minikube-backend-values
     files:
       - backend-values.yaml
