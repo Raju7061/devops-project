@@ -1,4 +1,4 @@
 global:
-  releaseTag: "v26.100.15"
+  releaseTag: "v26.100.4"
   environment: minikube
   namespace: raju

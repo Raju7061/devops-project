@@ -3,7 +3,7 @@ consumer:
   replicaCount: 1
   image:
     repository: 2024dock/cdc-consumer
-    tag: "v1.0.3"
+    tag: "v1.0.4"
   config:
     KAFKA_BOOTSTRAP_SERVERS: "raju-stack-kafka:9092"
     KAFKA_TOPIC: "todo.public.todos"
