@@ -3,7 +3,7 @@ backend:
   replicaCount: 1
   image:
     repository: 2024dock/cdc-backend
-    tag: "v1.0.13"
+    tag: "v1.0.14"
   service:
     type: ClusterIP
     port: 8080
