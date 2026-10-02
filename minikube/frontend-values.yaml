@@ -1,0 +1,17 @@
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 2024dock/cdc-frontend
+    tag: "v1.0.13"
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: todo.local
+        paths:
+          - path: /
+            pathType: Prefix

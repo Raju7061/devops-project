@@ -1,0 +1,50 @@
+kibana:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: docker.elastic.co/kibana/kibana
+    tag: "8.15.3"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5601
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: todo.kibana
+        paths:
+          - path: /
+            pathType: Prefix
+  env:
+    SERVER_HOST: "0.0.0.0"
+    ELASTICSEARCH_HOSTS: '["http://raju-stack-elasticsearch:9200"]'
+    NODE_OPTIONS: "--max-old-space-size=512"
+  startupProbe:
+    httpGet:
+      path: /api/status
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 60
+  readinessProbe:
+    httpGet:
+      path: /api/status
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 12
+  livenessProbe:
+    httpGet:
+      path: /api/status
+      port: http
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi

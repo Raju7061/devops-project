@@ -1,0 +1,27 @@
+kowl:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: docker.redpanda.com/redpandadata/console
+    tag: "v2.8.8"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: todo.kowl
+        paths:
+          - path: /
+            pathType: Prefix
+  env:
+    KAFKA_BROKERS: "raju-stack-kafka:9092"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

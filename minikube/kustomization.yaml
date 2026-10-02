@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: raju
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - release.yaml
+
+configMapGenerator:
+  - name: minikube-global-values
+    files:
+      - global-values.yaml
+  - name: minikube-backend-values
+    files:
+      - backend-values.yaml
+  - name: minikube-frontend-values
+    files:
+      - frontend-values.yaml
+  - name: minikube-consumer-values
+    files:
+      - consumer-values.yaml
+  - name: minikube-postgres-values
+    files:
+      - postgres-values.yaml
+  - name: minikube-kafka-values
+    files:
+      - kafka-values.yaml
+  - name: minikube-debezium-values
+    files:
+      - debezium-values.yaml
+  - name: minikube-elasticsearch-values
+    files:
+      - elasticsearch-values.yaml
+  - name: minikube-kibana-values
+    files:
+      - kibana-values.yaml
+  - name: minikube-kowl-values
+    files:
+      - kowl-values.yaml
+  - name: minikube-monitoring-values
+    files:
+      - monitoring-values.yaml

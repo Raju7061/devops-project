@@ -1,0 +1,14 @@
+postgres:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: "16.4"
+  auth:
+    database: tododb
+    username: todo_user
+    password: todo_password
+  persistence:
+    enabled: true
+    storageClass: standard
+    size: 5Gi
