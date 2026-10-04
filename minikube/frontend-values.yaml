@@ -1,6 +1,6 @@
 frontend:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: 2024dock/cdc-frontend
     tag: "v1.0.21"
