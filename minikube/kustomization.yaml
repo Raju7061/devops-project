@@ -4,6 +4,8 @@ kind: Kustomization
 namespace: raju
 generatorOptions:
   disableNameSuffixHash: true
+  labels:
+    reconcile.fluxcd.io/watch: Enabled
 
 resources:
   - release.yaml
