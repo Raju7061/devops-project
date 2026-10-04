@@ -43,12 +43,14 @@ spec:
 
   install:
     createNamespace: true
+    disableWait: false
     remediation:
       retries: 3
       remediateLastFailure: true
 
   upgrade:
     cleanupOnFail: true
+    disableWait: false
     remediation:
       retries: 3
       remediateLastFailure: true
@@ -64,6 +66,16 @@ spec:
 
   driftDetection:
     mode: enabled
+
+  values:
+    global:
+      releaseTag: "v26.100.21"
+    frontend:
+      image:
+        tag: "v1.0.21"
+    backend:
+      image:
+        tag: "v1.0.14"
 
   valuesFrom:
     - kind: ConfigMap
