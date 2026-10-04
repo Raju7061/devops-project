@@ -85,9 +85,6 @@ spec:
 
   valuesFrom:
     - kind: ConfigMap
-      name: minikube-global-values
-      valuesKey: global-values.yaml
-    - kind: ConfigMap
       name: minikube-auth-values
       valuesKey: auth-values.yaml
     - kind: ConfigMap
