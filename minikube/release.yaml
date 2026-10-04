@@ -14,7 +14,13 @@ metadata:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/part-of: todo-cdc-platform
     app.kubernetes.io/environment: minikube
-
+spec:
+  values:
+    global:
+      releaseTag: v26.100.22
+    frontend:
+      image:
+        tag: v26.100.22
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -24,13 +30,11 @@ metadata:
   labels:
     app.kubernetes.io/name: raju-stack
     app.kubernetes.io/environment: minikube
-
 spec:
   interval: 2m
   releaseName: raju-stack
   timeout: 10m
   maxHistory: 10
-
   chart:
     spec:
       chart: ./charts/raju-stack
@@ -40,14 +44,12 @@ spec:
         namespace: flux-system
       reconcileStrategy: Revision
       interval: 5m
-
   install:
     createNamespace: true
     disableWait: false
     remediation:
       retries: 3
       remediateLastFailure: true
-
   upgrade:
     cleanupOnFail: true
     disableWait: false
@@ -55,24 +57,20 @@ spec:
       retries: 3
       remediateLastFailure: true
       strategy: rollback
-
   rollback:
     cleanupOnFail: true
     recreate: true
-
   uninstall:
     keepHistory: false
     deletionPropagation: background
-
   driftDetection:
     mode: enabled
-
   values:
     global:
-      releaseTag: "v26.100.21"
+      releaseTag: "v26.100.22"
     frontend:
       image:
-        tag: "v1.0.21"
+        tag: "v26.100.22"
     backend:
       image:
         tag: "v1.0.14"
@@ -82,7 +80,6 @@ spec:
     consumer:
       image:
         tag: "v1.0.8"
-
   valuesFrom:
     - kind: ConfigMap
       name: minikube-auth-values
