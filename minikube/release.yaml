@@ -76,6 +76,12 @@ spec:
     backend:
       image:
         tag: "v1.0.14"
+    auth-service:
+      image:
+        tag: "v1.0.4"
+    consumer:
+      image:
+        tag: "v1.0.8"
 
   valuesFrom:
     - kind: ConfigMap
